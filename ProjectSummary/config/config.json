@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "project-summary-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/projectSummary/ProjectSummaryWebPart.js",
+          "manifest": "./src/webparts/projectSummary/ProjectSummaryWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {
+    "jquery": {
+      "path": "https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js",
+      "globalName": "jQuery"
+    },
+    "MultiFile": {
+      "path": "https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.MultiFile.js",
+      "globalName": "jQuery"
+      
+    },
+    "CustomJS": {
+      "path": "./src/webparts/projectSummary/components/CustomJS.js",
+      "globalName": "CustomJS"
+    }
+  },
+  "localizedResources": {
+    "ProjectSummaryWebPartStrings": "lib/webparts/projectSummary/loc/{locale}.js",
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
+  }
+}
