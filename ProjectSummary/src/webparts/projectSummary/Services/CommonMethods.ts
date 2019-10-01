@@ -72,5 +72,21 @@ export class ListFormService implements IListFormService {
     }
 
 
+    /**
+     * Gets list items from a specified SharePoint list.     *
+     * @param context Context of the Webpart to call SPHttpClient.
+     * @param listTitle List title to get data from sharepoint list.     
+     * @param ItemID list Item ID to get data.
+     * @returns Promise object represents the array of Item fields from a list.
+     */
+
+    public _getListItem(context: WebPartContext,listTitle: string, ItemId:number){
+      const restApi = `${context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('${listTitle}')/items(${ItemId})`;
+      return context.spHttpClient.get(restApi, SPHttpClient.configurations.v1)
+        .then(resp => { return resp.json(); });      
+     
+    }
+
+
 
 }

@@ -9,9 +9,12 @@ export interface IProjectSummaryState {
   multiline: boolean;
   startDate: Date;
   addUsers: number[];
-  items: IListItem[];
+  items: IListItem;
   status:string;
   fieldData:IFieldSchema[];
+  disabled : boolean;
+  isAdmin:boolean;
+  
 }
 
 export interface IListItem {

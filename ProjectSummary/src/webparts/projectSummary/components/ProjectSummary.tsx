@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
-import { Label, TextField, DatePicker, DefaultButton, PrimaryButton, Spinner, SpinnerSize } from 'office-ui-fabric-react/lib';
+import { Label, TextField, DatePicker, DefaultButton, PrimaryButton, Spinner, SpinnerSize, PeoplePickerItemSuggestion } from 'office-ui-fabric-react/lib';
 import styles from './ProjectSummary.module.scss';
 import { IProjectSummaryProps, IProjectSummaryState, IListItem, IFieldSchema } from './IProjectSummaryProps';
 import { escape } from '@microsoft/sp-lodash-subset';
@@ -26,6 +26,7 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
   private listItemEntityTypeName: string = undefined;
   private listFormService: IListFormService;
   private fields = [];
+  public ItemId: number;
 
   constructor(props: IProjectSummaryProps) {
     super(props);
@@ -34,9 +35,11 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
       multiline: false,
       startDate: null,
       addUsers: [],
-      items: [],
+      items: {},
       status: null,
-      fieldData: []
+      fieldData: [],
+      disabled: false,
+      isAdmin:false
 
     };
     // SPComponentLoader.loadScript('//www.microsofttranslator.com/ajax/v3/WidgetV3.ashx?siteData=ueOIGRSKkd965FeEGM5JtQ**', { globalExportsName: 'Translator' }).then((): void => {
@@ -56,12 +59,28 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
 
 
     this.listFormService = new ListFormService(props.context.spHttpClient);
-    //let ctx = this;
+    let ItemId = Number(window.location.search.split("ItemId=")[1]);
+    this._getProjectActions();
+
+    if (ItemId) {
+      this.listFormService._getListItem(this.props.context, "Projects", ItemId)
+        .then((response) => {
+          this.setState({
+            items: response,
+            disabled: true,
+            startDate: response.ProposedStartDate ? new Date(response.ProposedStartDate) : null
+          });
+
+        })
+    }
+
+    // this.setState({
+    //   loginUser:this.props.context.pageContext.user.email
+    // })
+
   }
 
-
-
-
+  //Method to convert single line text to multy line field in html.
   private _onChange = (ev: any, newText: string): void => {
     const newMultiline = newText.length > 50;
     if (newMultiline !== this.state.multiline) {
@@ -78,64 +97,55 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
   };
 
   public componentDidMount(): void {
-    this._getProjectActions();
+
     setTimeout(function () {
       CustomJS.load();
     }, 3000);
-
-
-    //commonMethod._getListItems("Projects");
-    //this.listFormService.getlistFields(this.context, "Projects");
   }
 
-
+  /**
+     * Gets the schema for all relevant fields for a specified SharePoint list form.     
+     * @param event to capture the type of event.     
+     * @  Method to capture updated in the form.
+     */
   private handleChange(event) {
     if (event.target.value !== "") {
       this.fields.push(event.target.id);
     }
-    //this.fields = Array.from(new Set(this.fields.map((item: any) => item.id)))
-    //this.fields = [new Set(this.fields.map((item: any) => item.id))];
   }
 
+  //function to generate dynamic data body to create an item.
   private _getContentBody(listItemEntityTypeName: string) {
-
-    let _fields = [...new Set(this.fields)];//Array.from(new Set(this.fields.map((item: any) => item.id)));
-
-    let bodyContent = [];
-
-    for (let id of _fields) {
-      let value = (document.getElementById(id) as HTMLInputElement).value;
-      bodyContent.push(`${id} : ${value}`);
-    }
-
-
-    let body: string = JSON.stringify({
+    let _fields = [...new Set(this.fields)];
+    var bodyContent = {
       '__metadata': {
         'type': listItemEntityTypeName
       },
-      bodyContent
-    });
+    }
 
-    //return JSON.stringify(body);
-
+    for (let id of _fields) {
+      let value = (document.getElementById(id) as HTMLInputElement).value;
+      bodyContent[id] = value;
+    }
+    let body: string = JSON.stringify(bodyContent);
     return body;
   }
 
-
-
   //function to get the project Actions
   public _getProjectActions() {
-    let ProjectActions = this.listFormService._getListitems(this.props.context, "Actions Master").then((response) => {
-      let items = response.value;
-      items.forEach(item => {
-        this.ProjectActions.push({
-          key: item.Id,
-          text: item.Title
-        })
+    let ProjectActions = this.listFormService._getListitems(this.props.context, "Actions Master")
+      .then((response) => {
+        let items = response.value;
+        items.forEach(item => {
+          this.ProjectActions.push({
+            key: item.Id,
+            text: item.Title
+          })
+        });
       });
-    });
   }
 
+  //function to capture People picker.
   private _getPeoplePickerItems(items: any[]) {
     this.state.addUsers.length = 0;
     let tempuserMngArr = [];
@@ -146,22 +156,16 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
     console.log('Items:', items);
   }
 
+  //function to submit the Project summary and for updates
+
   private async _submitform(): Promise<void> {
     this.setState({
       status: 'Project Submitting...',
-      items: []
     });
 
     this.listFormService._getListItemEntityTypeName(this.props.context, "Projects")
       .then(listItemEntityTypeName => {
         let vbody: string = this._getContentBody(listItemEntityTypeName);
-
-        // JSON.stringify({
-        //   '__metadata': {
-        //     'type': listItemEntityTypeName
-        //   },
-        //   'Title': `Item ${new Date()}`
-        // });
         return this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Projects')/items`, SPHttpClient.configurations.v1, {
           headers: {
             'Accept': 'application/json;odata=nometadata',
@@ -175,32 +179,32 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
       })
       .then((item: IListItem): void => {
         this.setState({
-          status: `Item '${item.Title}' successfully created`,
-          items: []
+          status: `Item '${item.Title}' successfully created`
         });
       }, (error: any): void => {
         this.setState({
-          status: 'Error while creating the item: ' + error,
-          items: []
+          status: 'Error while creating the item: ' + error
         });
       });
-
   }
 
 
   public render(): React.ReactElement<IProjectSummaryProps> {
 
+    // return (
+    //   <div>
+    //    // {this.state.items.map((item: any, inc) => {
     return (
       <div className={styles.projectSummary}>
         <div id='reactForm'>
           <div className={styles.row}>
-            <TextField id="Title" label="Name of Project" placeholder="Project Title" required onBlur={this.handleChange.bind(this)} />
+            <TextField id="Title" label="Name of Project" placeholder="Project Title" required onBlur={this.handleChange.bind(this)} value={this.state.items.Title} disabled={this.state.disabled} />
           </div>
           <div className={styles.row}>
-            <TextField id="ProjectDescription" label="Shot Description" multiline rows={3} onBlur={this.handleChange.bind(this)} />
+            <TextField id="ProjectDescription" label="Shot Description" multiline rows={3} onBlur={this.handleChange.bind(this)} value={this.state.items.ProjectDescription} disabled={this.state.disabled} />
           </div>
           <div className={styles.row}>
-            <TextField id="Listofinvestors" label="Investors/Partners" placeholder="List of Investors/Partners" required onBlur={this.handleChange.bind(this)} />
+            <TextField id="Listofinvestors" label="Investors/Partners" placeholder="List of Investors/Partners" required onBlur={this.handleChange.bind(this)} value={this.state.items.Listofinvestors} disabled={this.state.disabled} />
           </div>
           <div className={styles.row}>
             <TextField
@@ -211,10 +215,12 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
               onChange={this._onChange}
               placeholder="Products & Associated Quantity"
               onBlur={this.handleChange.bind(this)}
+              value={this.state.items.Productsandassociatedquantities}
+              disabled={this.state.disabled}
             />
           </div>
           <div className={styles.row}>
-            <TextField id="CapitalExpenditure" label="Capital Expenditure" placeholder="Capital Expenditure" onBlur={this.handleChange.bind(this)} />
+            <TextField id="CapitalExpenditure" label="Capital Expenditure" placeholder="Capital Expenditure" onBlur={this.handleChange.bind(this)} value={this.state.items.CapitalExpenditure} disabled={this.state.disabled} />
           </div>
           <div className={styles.row}>
             <Label >Proposed Start Date</Label>
@@ -225,44 +231,45 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
               formatDate={this._onFormatDate}
               minDate={new Date(2000, 12, 30)}
               isMonthPickerVisible={false}
+              disabled={this.state.disabled}
             />
           </div>
           <div className={styles.Requirement}>
             <div className={styles.subHeader}><span>Requirement</span></div>
             <div className={styles.row}>
-              <TextField id="Naturalgas" label="Natural Gas" onBlur={this.handleChange.bind(this)} />
+              <TextField id="Naturalgas" label="Natural Gas" onBlur={this.handleChange.bind(this)} value={this.state.items.Naturalgas} disabled={this.state.disabled} />
             </div>
             <div className={styles.row}>
-              <TextField id="Electricity" label="Electricity" onBlur={this.handleChange.bind(this)} />
+              <TextField id="Electricity" label="Electricity" onBlur={this.handleChange.bind(this)} value={this.state.items.Electricity} disabled={this.state.disabled} />
             </div>
             <div className={styles.row}>
-              <TextField id="Water" label="Water" onBlur={this.handleChange.bind(this)} />
+              <TextField id="Water" label="Water" onBlur={this.handleChange.bind(this)} value={this.state.items.Water} disabled={this.state.disabled} />
             </div>
             <div className={styles.row}>
-              <TextField id="Land" label="Land" onBlur={this.handleChange.bind(this)} />
+              <TextField id="Land" label="Land" onBlur={this.handleChange.bind(this)} value={this.state.items.Land} disabled={this.state.disabled} />
             </div>
             <div className={styles.row}>
-              <TextField id="Port" label="Port" onBlur={this.handleChange.bind(this)} />
+              <TextField id="Port" label="Port" onBlur={this.handleChange.bind(this)} value={this.state.items.Port} disabled={this.state.disabled} />
             </div>
             <div className={styles.row}>
-              <TextField id="Other" label="Other" onBlur={this.handleChange.bind(this)} />
+              <TextField id="Other" label="Other" onBlur={this.handleChange.bind(this)} value={this.state.items.Other} disabled={this.state.disabled} />
             </div>
           </div>
 
-          <div className={styles.row}>
+          <div className={styles.row} style={this.state.isAdmin ? {} : { display: 'none' }}>
             <PeoplePicker
               context={this.props.context}
-              titleText="People Picker"
+              titleText="Investor"
               personSelectionLimit={3}
               groupName={""} // Leave this blank in case you want to filter from all users
               showtooltip={true}
               isRequired={true}
-              disabled={false}
+              disabled={this.state.disabled}
               ensureUser={true}
               selectedItems={this._getPeoplePickerItems}
               showHiddenInUI={false}
               principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
-              resolveDelay={500}
+              resolveDelay={1500}
             />
           </div>
 
@@ -288,6 +295,10 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
         ></PrimaryButton>
 
       </div>
-    );
+    )
+    //   })}
+
+    // </div>
+    //);
   }
 }
