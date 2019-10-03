@@ -87,6 +87,21 @@ export class ListFormService implements IListFormService {
      
     }
 
+    public _getListItem_etag(context: WebPartContext,listTitle: string, ItemId:number){
+      const restApi = `${context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('${listTitle}')/items(${ItemId})`;
+      return context.spHttpClient.get(restApi, SPHttpClient.configurations.v1)
+      .then((response: SPHttpClientResponse) => {
+        let etag = response.headers.get('ETag');
+          return etag; });      
+     
+    }
+
+    public _getloginusergroups(context: WebPartContext){
+      const restApi = `${context.pageContext.web.absoluteUrl}/_api/web/currentuser/?$expand=groups`;
+      return context.spHttpClient.get(restApi, SPHttpClient.configurations.v1)
+        .then(resp => { return resp.json(); });  
+    }
+
 
 
 }

@@ -2,6 +2,7 @@
     interface ICustomjs{
         load():void;
         fnAlert(text:string):void;
+        fnUploadAttachments(siteURL:string,itemID:string):void;
     }
 
     var CustomJS :ICustomjs; 

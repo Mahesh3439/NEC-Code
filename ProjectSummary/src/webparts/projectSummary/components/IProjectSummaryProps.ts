@@ -14,7 +14,8 @@ export interface IProjectSummaryState {
   fieldData:IFieldSchema[];
   disabled : boolean;
   isAdmin:boolean;
-  
+  pjtAccepted:boolean;
+  Actions:any[];  
 }
 
 export interface IListItem {
@@ -36,12 +37,16 @@ export interface IListItem {
   Other?: string;
   CapitalExpenditure?: string;
   ProposedStartDate?: string;
-  ActionTaken?: string;
+  ActionTakenId?: string;
   LiaisonOfficer?: string;
   Comments?: string;
   Status?: string;
   Stage?: string;
   Activity?: string;
+  PotentialSaving?:string;
+  WarehousingRequirements?:string;
+  ElectricityMW?:string;
+  ElectricityKW?:string;
 }
 
 
