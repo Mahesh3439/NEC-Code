@@ -5,13 +5,15 @@ import { SPComponentLoader } from '@microsoft/sp-loader';
 import { BaseClientSideWebPart, WebPartContext } from '@microsoft/sp-webpart-base';
 import {
   IPropertyPaneConfiguration,
-  PropertyPaneTextField
+  PropertyPaneTextField 
 } from '@microsoft/sp-property-pane';
 
 import * as strings from 'ProjectSummaryWebPartStrings';
 
 import ProjectSummary from './components/ProjectSummary';
 import { IProjectSummaryProps } from './components/IProjectSummaryProps';
+import  HTMLContent from './components/DevTest';
+import {IApprovalsProps} from './components/DevTest';
 
 import * as CustomJS from 'CustomJS';
 
@@ -19,22 +21,23 @@ require('MultiFile');
 
 export interface IProjectSummaryWebPartProps {
   description: string;
-  context: WebPartContext;
+  context: WebPartContext
+ 
 }
 
 export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjectSummaryWebPartProps> {
 
 
   public render(): void {
-    const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
-      ProjectSummary,
-      {
-        description: this.properties.description,
-        context: this.context
-      }
-    );
-
-    ReactDom.render(element, this.domElement);
+    //const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
+   
+      const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
+       ProjectSummary,       
+        {         
+          context: this.context
+        }
+      );
+      ReactDom.render(element, this.domElement);   
   }
 
   protected onDispose(): void {

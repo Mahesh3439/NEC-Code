@@ -9,6 +9,14 @@
           "manifest": "./src/webparts/projectSummary/ProjectSummaryWebPart.manifest.json"
         }
       ]
+    },
+    "promotion-response-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/promotionResponse/PromotionResponseWebPart.js",
+          "manifest": "./src/webparts/promotionResponse/PromotionResponseWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {
@@ -19,15 +27,15 @@
     "MultiFile": {
       "path": "https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.MultiFile.js",
       "globalName": "jQuery"
-      
     },
     "CustomJS": {
-      "path": "./src/webparts/projectSummary/components/CustomJS.js",
+      "path": "./src/Commonfiles/Services/CustomJS.js",
       "globalName": "CustomJS"
     }
   },
   "localizedResources": {
     "ProjectSummaryWebPartStrings": "lib/webparts/projectSummary/loc/{locale}.js",
-    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js",
+    "PromotionResponseWebPartStrings": "lib/webparts/promotionResponse/loc/{locale}.js"
   }
 }

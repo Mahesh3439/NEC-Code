@@ -1,28 +1,24 @@
-import { WebPartContext } from '@microsoft/sp-webpart-base';
+import { WebPartContext } from "@microsoft/sp-webpart-base";
 
-export interface IProjectSummaryProps {
-  context: WebPartContext;
+export interface IPromotionResponseProps { 
+  context:WebPartContext;
 }
 
-export interface IProjectSummaryState {
+export interface IPromotionResponseState {
   multiline: boolean;
   startDate: Date;
   addUsers: number[];
   items: IListItem;
   status: string;  
-  disabled: boolean;
+  crtPjtSpace: boolean;
   isAdmin: boolean;
-  pjtAccepted: boolean;
-  Actions: any[];
-  Stages: any[];
-  Activities: any[];
-  ActionTaken: number;
-  Stage: number;
-  Activity: number;
+  pjtAccepted: boolean;   
   showState: boolean;
   hideDialog: boolean;
   formType:string;
   pjtSpace:string;
+  PromotionType:string;
+   
 }
 
 export interface IListItem {
@@ -43,25 +39,17 @@ export interface IListItem {
   Port?: string;
   Other?: string;
   CapitalExpenditure?: string;
-  ProposedStartDate?: string;
-  ActionTakenId?: string;
+  ProposedStartDate?: string; 
   LiaisonOfficerId?: string;
   Comments?: string;
   Status?: string;
-  StageId?: string;
-  ActivityId?: string;
+  PromotionID?:string;
+  RFPPStatus?:string;
+  EOIStatus?:string; 
   PotentialSaving?: string;
   WarehousingRequirements?: string;
   ElectricityMW?: string;
   ElectricityKW?: string;
   ProjectURL?:string;
-}
-
-
-export interface IProjectSpace {
-  siteTitle?: string;
-  siteURL?: string;
-  siteOwner?: number;
-  siteDesp?: string;
-  investor?: number;
+  AuthorId?:number
 }

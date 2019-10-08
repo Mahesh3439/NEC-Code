@@ -1,6 +1,6 @@
 @import '~@microsoft/sp-office-ui-fabric-core/dist/sass/SPFabricCore.scss';
 
-.projectSummary {
+.promotionResponse {
   .container {
     max-width: 700px;
     margin: 0px auto;
@@ -9,8 +9,8 @@
 
   .row {
     @include ms-Grid-row;
-    //@include ms-fontColor-white;
-    // background-color: $ms-color-themeDark;
+    @include ms-fontColor-white;
+    /* background-color: $ms-color-themeDark; */
     padding: 20px;
   }
 
@@ -70,9 +70,8 @@
       vertical-align: top;
       display: inline-block;
     }
-    
   }
-  
+
   .Requirement
   {
     border:1px solid orange;
