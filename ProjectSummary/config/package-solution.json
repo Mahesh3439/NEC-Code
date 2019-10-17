@@ -5,7 +5,21 @@
     "id": "57fa4cab-735f-4b03-b0c7-6c9da999f995",
     "version": "1.0.0.0",
     "includeClientSideAssets": true,
-    "isDomainIsolated": false
+    "isDomainIsolated": false,
+    "features": [
+      {
+        "title": "Application Extension - Deployment of custom action.",
+        "description": "Deploys a custom action with ClientSideComponentId association",
+        "id": "ca510f79-71a5-46e9-a21c-43bb721805b1",
+        "version": "1.0.0.0",
+        "assets": {
+          "elementManifests": [
+            "elements.xml",
+            "clientsideinstance.xml"
+          ]
+        }
+      }
+    ]
   },
   "paths": {
     "zippedPackage": "solution/project-summary.sppkg"

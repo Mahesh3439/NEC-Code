@@ -16,8 +16,8 @@ import { IPromotionResponseProps } from './components/IPromotionResponseProps';
 
 export interface IPromotionResponseWebPartProps {
   description: string;
-  FormType: string
-  context:WebPartContext
+  FormType: string;
+  context:WebPartContext;
 }
 
 export default class PromotionResponseWebPart extends BaseClientSideWebPart<IPromotionResponseWebPartProps> {

@@ -23,6 +23,11 @@ export interface IProjectSummaryState {
   hideDialog: boolean;
   formType:string;
   pjtSpace:string;
+  listID:string;
+  ItemId:number;
+  liaisonEmail:string;
+  stageStartDate:Date;
+  isLiaison:boolean;
 }
 
 export interface IListItem {
@@ -55,6 +60,7 @@ export interface IListItem {
   ElectricityMW?: string;
   ElectricityKW?: string;
   ProjectURL?:string;
+  StageStartDate?:string;
 }
 
 

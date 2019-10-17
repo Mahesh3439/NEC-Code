@@ -5,15 +5,18 @@ import { SPComponentLoader } from '@microsoft/sp-loader';
 import { BaseClientSideWebPart, WebPartContext } from '@microsoft/sp-webpart-base';
 import {
   IPropertyPaneConfiguration,
-  PropertyPaneTextField 
+  PropertyPaneTextField,
+  PropertyPaneDropdown 
 } from '@microsoft/sp-property-pane';
 
 import * as strings from 'ProjectSummaryWebPartStrings';
 
 import ProjectSummary from './components/ProjectSummary';
+import ProjectSummarySubmit from './components/ProjectSummarySubmit';
+import ProjectSummaryUpdate from './components/ProjectSummaryUpdate';
+import ProjectSpace from './components/ProjectSpace';
+import ProjectApprovals from './components/ProjectApprovals';
 import { IProjectSummaryProps } from './components/IProjectSummaryProps';
-import  HTMLContent from './components/DevTest';
-import {IApprovalsProps} from './components/DevTest';
 
 import * as CustomJS from 'CustomJS';
 
@@ -21,7 +24,8 @@ require('MultiFile');
 
 export interface IProjectSummaryWebPartProps {
   description: string;
-  context: WebPartContext
+  FormType: string;
+  context: WebPartContext;
  
 }
 
@@ -31,13 +35,46 @@ export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjec
   public render(): void {
     //const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
    
-      const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
-       ProjectSummary,       
-        {         
-          context: this.context
-        }
-      );
-      ReactDom.render(element, this.domElement);   
+      if (this.properties.FormType == "New") {
+        const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
+          ProjectSummarySubmit,
+          {          
+            context: this.context
+          }
+        );
+  
+        ReactDom.render(element, this.domElement);
+      }
+      else if (this.properties.FormType == "Edit") {
+        const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
+          ProjectSummaryUpdate,
+          {
+            context: this.context
+          }
+        );
+  
+        ReactDom.render(element, this.domElement);
+      }
+      else if (this.properties.FormType == "ProjectSpace") {
+        const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
+          ProjectSpace,
+          {
+            context: this.context
+          }
+        );
+  
+        ReactDom.render(element, this.domElement);
+      }
+      else if (this.properties.FormType == "Approvals") {
+        const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
+          ProjectApprovals,
+          {
+            context: this.context
+          }
+        );
+  
+        ReactDom.render(element, this.domElement);
+      }
   }
 
   protected onDispose(): void {
@@ -61,6 +98,16 @@ export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjec
               groupFields: [
                 PropertyPaneTextField('description', {
                   label: strings.DescriptionFieldLabel
+                }),
+                PropertyPaneDropdown('FormType', {
+                  label: 'Form Type',
+                  options: [
+                    { key: 'New', text: 'New' },
+                    { key: 'Edit', text: 'Edit' },
+                    { key: 'ProjectSpace', text: 'ProjectSpace' },
+                    { key: 'Approvals', text: 'Approvals' }
+                   
+                  ]
                 })
               ]
             }

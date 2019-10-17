@@ -17,9 +17,42 @@
           "manifest": "./src/webparts/promotionResponse/PromotionResponseWebPart.manifest.json"
         }
       ]
+    },
+    "nec-extension-application-customizer": {
+      "components": [
+        {
+          "entrypoint": "./lib/extensions/necExtension/NecExtensionApplicationCustomizer.js",
+          "manifest": "./src/extensions/necExtension/NecExtensionApplicationCustomizer.manifest.json"
+        }
+      ]
     }
   },
   "externals": {
+    "sp-init": {
+      "path": "https://ttengage.sharepoint.com/_layouts/15/init.js",
+      "globalName": "$_global_init"
+    },
+    "microsoft-ajax": {
+      "path": "https://ttengage.sharepoint.com/_layouts/15/MicrosoftAjax.js",
+      "globalName": "Sys",
+      "globalDependencies": [
+        "sp-init"
+      ]
+    },
+    "sp-runtime": {
+      "path": "https://ttengage.sharepoint.com/_layouts/15/SP.Runtime.js",
+      "globalName": "SP",
+      "globalDependencies": [
+        "microsoft-ajax"
+      ]
+    },
+    "sharepoint": {
+      "path": "https://ttengage.sharepoint.com/_layouts/15/SP.js",
+      "globalName": "SP",
+      "globalDependencies": [
+        "sp-runtime"
+      ]
+    },
     "jquery": {
       "path": "https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js",
       "globalName": "jQuery"
@@ -36,6 +69,7 @@
   "localizedResources": {
     "ProjectSummaryWebPartStrings": "lib/webparts/projectSummary/loc/{locale}.js",
     "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js",
-    "PromotionResponseWebPartStrings": "lib/webparts/promotionResponse/loc/{locale}.js"
+    "PromotionResponseWebPartStrings": "lib/webparts/promotionResponse/loc/{locale}.js",
+    "NecExtensionApplicationCustomizerStrings": "lib/extensions/necExtension/loc/{locale}.js"
   }
 }

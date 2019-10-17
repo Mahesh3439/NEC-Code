@@ -7,7 +7,7 @@ import styles from './ProjectSummary.module.scss';
 import { IProjectSummaryProps, IProjectSummaryState, IListItem, IProjectSpace } from './IProjectSummaryProps';
 import { escape } from '@microsoft/sp-lodash-subset';
 import * as CustomJS from 'CustomJS';
-import * as $ from 'jQuery';
+//import * as $ from 'jQuery';
 import { SPComponentLoader } from '@microsoft/sp-loader';
 import { PeoplePicker, PrincipalType } from "@pnp/spfx-controls-react/lib/PeoplePicker";
 import { RichText } from "@pnp/spfx-controls-react/lib/RichText";
@@ -22,7 +22,7 @@ import {
 } from "office-ui-fabric-react/lib/Dropdown";
 import { ListFormService } from '../../../Commonfiles/Services/CommonMethods';
 import { IListFormService } from '../../../Commonfiles/Services/ICommonMethods';
-import HTMLContent from './HTMLComp';
+
 
 
 export default class ProjectSummary extends React.Component<IProjectSummaryProps, IProjectSummaryState, {}> {
@@ -60,7 +60,12 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
       showState: false,
       hideDialog: true,
       formType: "New",
-      pjtSpace: null
+      pjtSpace: null,
+      listID: null,
+      ItemId: null,
+      liaisonEmail:null,
+      stageStartDate:null,
+      isLiaison:false
     };
     SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js', {
       globalExportsName: 'jQuery'
@@ -72,7 +77,7 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
       });
     }).catch((error) => {
 
-    })
+    });
 
 
     this.listFormService = new ListFormService(props.context.spHttpClient);
@@ -81,10 +86,10 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
 
     if (this.ItemId) {
       const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Projects')/items(${this.ItemId})?$select=*,LiaisonOfficer/Id,LiaisonOfficer/EMail&$expand=LiaisonOfficer`;
-      this.listFormService._getListItem(this.props.context,restApi)
+      this.listFormService._getListItem(this.props.context, restApi)
         .then((response) => {
 
-          let vShowState = false
+          let vShowState = false;
 
           if (response.LiaisonOfficerId) {
             let isliaison = response.LiaisonOfficer.EMail == this.props.context.pageContext.user.email ? true : false;
@@ -98,7 +103,7 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
             this._getProjectState();
           }
           if (response.StageId) {
-            this._getActivities(response.StageId)
+            this._getActivities(response.StageId);
           }
 
           this.setState({
@@ -128,7 +133,7 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
           if (item.Title === "IF Admin") {
             this.setState({
               isAdmin: true
-            })
+            });
             return false;
           }
         }));
@@ -217,7 +222,7 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
 
   private _closeDialog = (): void => {
     this.setState({ hideDialog: true });
-  };
+  }
 
   //function to generate dynamic data body to create an item.
   private _getContentBody(listItemEntityTypeName: string) {
@@ -231,7 +236,7 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
     for (let id of _fields) {
       if (id == "ProposedStartDate-label") {
         let value = (document.getElementById(id) as HTMLInputElement).value;
-        let vDate = moment(value, "DD/MM/YYYY").format("MM/DD/YYYY")
+        let vDate = moment(value, "DD/MM/YYYY").format("MM/DD/YYYY");
         bodyContent["ProposedStartDate"] = new Date(vDate);
       }
       else {
@@ -239,7 +244,7 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
         bodyContent[id] = value;
       }
     }
-    bodyContent["PromotionType"] = "Direct"
+    bodyContent["PromotionType"] = "Direct";
     let body: string = JSON.stringify(bodyContent);
     return body;
   }
@@ -250,7 +255,7 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
       '__metadata': {
         'type': listItemEntityTypeName
       },
-    }
+    };
 
     for (let id of _fields) {
 
@@ -393,7 +398,7 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
           hideDialog: true,
           pjtSpace: responseJSON.ServerRelativeUrl
 
-        })
+        });
       });
   }
 
@@ -552,7 +557,7 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
           </div>
         </div>
 
-        <HTMLContent context={this.props.context} />
+       
 
         <PrimaryButton
           text="Submit"
@@ -580,6 +585,6 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
           </Dialog>
         </div>
       </div>
-    )
+    );
   }
 }

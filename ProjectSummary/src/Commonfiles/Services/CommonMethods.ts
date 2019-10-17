@@ -135,9 +135,9 @@ export class ListFormService implements IListFormService {
         };
         return context.spHttpClient.post(postURL, SPHttpClient.configurations.v1, spOpts)
           .then((response: SPHttpClientResponse) => {
-            return response.json()
+            return response.json();
           });
-      })
+      });
   }
 
 }

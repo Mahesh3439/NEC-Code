@@ -1,6 +1,9 @@
 @import '~@microsoft/sp-office-ui-fabric-core/dist/sass/SPFabricCore.scss';
 
 .projectSummary {
+
+  border:1px solid #CCC;
+
   .container {
     max-width: 700px;
     margin: 0px auto;
@@ -72,6 +75,31 @@
     }
     
   }
+
+  .header{
+    background: #e31b23;
+    border-color:#1670a4;
+    color:#fff;
+    padding-left:12px;
+    border-bottom:1px solid #DDD;
+
+      .title {
+        line-height: 36px;
+        padding: 0;
+        margin: 0;
+        display: inline;
+        font-weight: lighter;
+        font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }  
+  }
+
+  .body
+  {
+    margin: 5px;
+  }
+
+  
+
   
   .Requirement
   {
@@ -84,6 +112,13 @@
     font-weight: bold;
     background-color: orange;
   }
+  @media only screen and (min-width: 769px) {
+  .Electricity
+  {
+    width: 36% !important;
+    display: table-cell !important;    
+  }
+}
 }
 
 @media only screen and (min-width: 769px) {
@@ -98,6 +133,12 @@
     width: 36% !important;
     display: table-cell !important;    
   }
+
+  [class^="ApprovalCheckList"]
+  {
+    width:50% !important;
+    float: left;
+  }
   
 }
 
@@ -106,4 +147,10 @@
     margin: 10 0px !important;
     height: 27px !important;
   }
+
+  [class^="ApprovalCheckList"]
+  {
+    margin: 5px 0px;
+  }
+  
 }
