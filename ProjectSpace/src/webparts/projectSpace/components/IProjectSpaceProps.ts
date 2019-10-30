@@ -1,29 +1,34 @@
-import { WebPartContext } from "@microsoft/sp-webpart-base";
 
-export interface IPromotionResponseProps { 
-  context:WebPartContext;
+import { WebPartContext } from '@microsoft/sp-webpart-base';
+
+export interface IProjectSpaceProps {
+  context: WebPartContext;
 }
 
-export interface IPromotionResponseState {
+export interface IProjectSpaceState {
   multiline: boolean;
   startDate: Date;
   addUsers: number[];
   items: IListItem;
   status: string;  
-  crtPjtSpace: boolean;
+  disabled: boolean;
   isAdmin: boolean;
-  pjtAccepted: boolean;   
+  pjtAccepted: boolean;
+  Actions: any[];
+  Stages: any[];
+  Activities: any[];
+  ActionTaken: number;
+  Stage: number;
+  Activity: number;
   showState: boolean;
   hideDialog: boolean;
   formType:string;
   pjtSpace:string;
-  PromotionType:string;
   listID:string;
   ItemId:number;
-  spinner:boolean;
-  disable:boolean;
-
-   
+  liaisonEmail:string;
+  stageStartDate:Date;
+  isLiaison:boolean;
 }
 
 export interface IListItem {
@@ -44,19 +49,26 @@ export interface IListItem {
   Port?: string;
   Other?: string;
   CapitalExpenditure?: string;
-  ProposedStartDate?: string; 
+  ProposedStartDate?: string;
+  ActionTakenId?: string;
   LiaisonOfficerId?: string;
   Comments?: string;
   Status?: string;
-  PromotionID?:string;
-  RFPPStatus?:string;
-  EOIStatus?:string; 
+  StageId?: string;
+  ActivityId?: string;
   PotentialSaving?: string;
   WarehousingRequirements?: string;
   ElectricityMW?: string;
   ElectricityKW?: string;
   ProjectURL?:string;
-  AuthorId?:number;
-  PjtTitle?:string;
-  DeadlineDate?:Date;
+  StageStartDate?:string;
+}
+
+
+export interface IProjectSpace {
+  siteTitle?: string;
+  siteURL?: string;
+  siteOwner?: number;
+  siteDesp?: string;
+  investor?: number;
 }

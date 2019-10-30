@@ -61,6 +61,7 @@ export interface IListItem {
   ElectricityKW?: string;
   ProjectURL?:string;
   StageStartDate?:string;
+  ReqAction?:string;
 }
 
 

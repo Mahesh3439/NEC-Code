@@ -45,7 +45,9 @@ export default class PromotionResponse extends React.Component<IPromotionRespons
       pjtSpace: null,
       PromotionType: null,
       listID: null,
-      ItemId: null
+      ItemId: null,
+      spinner:false,
+      disable:false
     };
     SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js', {
       globalExportsName: 'jQuery'

@@ -1,6 +1,6 @@
 @import '~@microsoft/sp-office-ui-fabric-core/dist/sass/SPFabricCore.scss';
 
-.promotionResponse {
+.projectSpace {
   .container {
     max-width: 700px;
     margin: 0px auto;
@@ -10,7 +10,7 @@
   .row {
     @include ms-Grid-row;
     @include ms-fontColor-white;
-    /* background-color: $ms-color-themeDark; */
+    background-color: $ms-color-themeDark;
     padding: 20px;
   }
 
@@ -70,67 +70,5 @@
       vertical-align: top;
       display: inline-block;
     }
-  }
-  .pullright
-  {
-    float: right;
-  }
-
-  .Requirement
-  {
-    border:1px solid orange;
-  }
-  .subHeader
-  {
-    padding-left: 10px;
-    font-size: large;
-    font-weight: bold;
-    background-color: orange;
-  }
-
-  .header{
-    background: #e31b23;
-    border-color:#1670a4;
-    color:#fff;
-    padding-left:12px;
-    border-bottom:1px solid #DDD;
-
-      .title {
-        line-height: 36px;
-        padding: 0;
-        margin: 0;
-        display: inline;
-        font-weight: lighter;
-        font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    }  
-  }
-
-  .body
-  {
-    margin: 5px;
-  }
-
-
-}
-
-@media only screen and (min-width: 769px) {
-  [class^="ms-Label"]
-  {
-    width: 20% !important;
-    float: left !important;
-  }
-
-  [class^="Electricity"]
-  {
-    width: 36% !important;
-    display: table-cell !important;    
-  }
-  
-}
-
-@media only screen and (max-width: 769px) {
-  .ms-TextField.Electricity{    
-    margin: 10 0px !important;
-    height: 27px !important;
   }
 }

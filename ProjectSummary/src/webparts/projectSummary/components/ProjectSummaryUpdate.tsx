@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDom from 'react-dom';
 import { Label, TextField, PrimaryButton, DefaultButton, DatePicker, Spinner } from 'office-ui-fabric-react/lib';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
+import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 
 import styles from './ProjectSummary.module.scss';
 import { IProjectSummaryProps, IProjectSummaryState, IListItem, IProjectSpace } from './IProjectSummaryProps';
@@ -23,7 +24,6 @@ import { IListFormService } from '../../../Commonfiles/Services/ICommonMethods';
 import '../../../Commonfiles/Services/customStyles.css';
 import { ListItemAttachments } from '@pnp/spfx-controls-react/lib/ListItemAttachments';
 import { sp, Web, ItemAddResult } from "@pnp/sp";
-import "@pnp/polyfill-ie11";
 
 export interface IProjectSummarySubmissionState {
     startDate: Date;
@@ -36,8 +36,8 @@ export interface IProjectSummarySubmissionState {
     hideDialog: boolean;
     pjtSpace: string;
     listID: string;
-    ItemId: number;  
-    spinner:boolean;
+    ItemId: number;
+    spinner: boolean;
 }
 
 
@@ -51,7 +51,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
     public liaisonofficer: number = null;
     public PjtState: string;
     public isActivityChanged: boolean = false;
-    public PjtStatus:string;
+    public PjtStatus: string;
 
 
 
@@ -70,7 +70,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
             pjtSpace: null,
             listID: null,
             ItemId: null,
-            spinner:false          
+            spinner: false
         };
         // SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js', {
         //     globalExportsName: 'jQuery'
@@ -208,12 +208,12 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                 }
             }
             else if (id == "ProjectURL")
-                bodyContent["ProjectURL"] = `https://ttengage.sharepoint.com${this.state.pjtSpace}`;           
+                bodyContent["ProjectURL"] = `https://ttengage.sharepoint.com${this.state.pjtSpace}`;
             else {
                 let value = (document.getElementById(id) as HTMLInputElement).value;
                 bodyContent[id] = value;
             }
-        }        
+        }
 
         let body: string = JSON.stringify(bodyContent);
         return body;
@@ -255,7 +255,10 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                     body: vbody
                 });
             }).then((response: SPHttpClientResponse): void => {
-                alert("Updated Successfully...");
+                this.setState({
+                    spinner: false
+                });
+                alert("Project Status updated Successfully");
                 window.location.href = this.props.context.pageContext.web.absoluteUrl;
 
             }, (error: any): void => {
@@ -264,25 +267,34 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
     }
 
     private _submitform() {
-        this.updateData()
+
+        if(this.ActionTakenKey == 1 && !this.liaisonofficer){
+            alert("Liaison Officer is required");
+            return false;
+        }
+
+        this.setState({
+            spinner: true
+        });
+        this.updateData();
 
     }
 
     public ProjectSpace() {
         this.setState({
-            spinner:true
+            spinner: true
         });
         let vsiteurl = `ProjectSpace${this.ItemId}`;
         let vsiteTitle = this.state.items.Title;
         let vsiteDesp = this.state.items.ProjectDescription;
 
-        this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl)
+        this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl,"")
             .then((responseJSON) => {
                 this.fields.push("ProjectURL");
                 this.setState({
                     hideDialog: true,
                     pjtSpace: responseJSON.ServerRelativeUrl,
-                    spinner:false
+                    spinner: false
 
                 });
             });
@@ -294,176 +306,172 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
             <div className={styles.projectSummary}>
                 <div className="widget-box widget-color-blue2">
                     <div className="widget-header">
-                        <h4 className="widget-title lighter smaller">PROJECT SUMMARY SUBMISSION</h4>
+                        <h4 className="widget-title lighter smaller">Project Summary Submission</h4>
                     </div>
-                    <div className="widget-body">
-                        <div className="widget-main padding-8">
-                            <div className="row">
-                                <div className="profile-user-info profile-user-info-striped">
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Project Title</div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Title" placeholder="Project Title" value={this.state.items.Title} disabled />
+                    <div className="widget-Summary">
+                        <div className="widget-body">
+                            <div className="widget-main padding-8">
+                                <div className="row">
+                                    <div className="profile-user-info profile-user-info-striped">
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Project Title</div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Title" underlined placeholder="Project Title" value={this.state.items.Title} disabled />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Short Description </div>
-                                        <div className="profile-info-value">
-                                            <TextField id="ProjectDescription" multiline rows={3} value={this.state.items.ProjectDescription} disabled />
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Short Description </div>
+                                            <div className="profile-info-value">
+                                                <TextField id="ProjectDescription" underlined multiline rows={3} value={this.state.items.ProjectDescription} disabled />
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">List of investors / Partners</div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Listofinvestors" placeholder="List of Investors/Partners" value={this.state.items.Listofinvestors} disabled />
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">List of investors / Partners</div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Listofinvestors" underlined placeholder="List of Investors/Partners" value={this.state.items.Listofinvestors} disabled />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Products  &amp; Associated Quantity</div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Productsandassociatedquantities"
-                                                name="Productsandassociatedquantities"
-                                                multiline
-                                                rows={3}
-                                                placeholder="Products & Associated Quantity"
-                                                value={this.state.items.Productsandassociatedquantities}
-                                                disabled={true} />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Capital Expenditure </div>
-                                        <div className="profile-info-value">
-                                            <TextField id="CapitalExpenditure" label="" placeholder="Capital Expenditure" value={this.state.items.CapitalExpenditure} disabled suffix="US$MM" />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Proposed Start Date </div>
-                                        <div className="profile-info-value">
-                                            <DatePicker placeholder=""
-                                                id="ProposedStartDate"
-                                                value={this.state.startDate}
-                                                formatDate={this._onFormatDate}
-                                                minDate={new Date(2000, 12, 30)}
-                                                isMonthPickerVisible={false}
-                                                disabled={true} />
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Proposed Start Date </div>
+                                            <div className="profile-info-value">
+                                                <DatePicker placeholder=""
+                                                    id="ProposedStartDate"
+                                                    value={this.state.startDate}
+                                                    formatDate={this._onFormatDate}
+                                                    minDate={new Date(2000, 12, 30)}
+                                                    isMonthPickerVisible={false}
+                                                    disabled={true} />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="widget-subheader" style={{ background: "#fbaf33", color: "#fff", width: "95%", margin: "0 auto", padding: "1px" }}>
-                        <h4 className="widget-title lighter smaller" style={{ margin: "5px" }}>Project Specifications</h4>
-                    </div>
-                    <div className="widget-body" style={{ width: "95%", margin: "0 auto" }}>
-                        <div className="widget-main " style={{ padding: "0 0px 8px 0px" }}>
-                            <div className="row">
-                                <div className="profile-user-info profile-user-info-striped">
-                                    <div className="profile-info-row" style={this.state.items.Naturalgas ? {} : { display: 'none' }}>
-                                        <div className="profile-info-name">Natural Gas</div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Naturalgas" suffix="mmscf/d" value={this.state.items.Naturalgas} disabled />
+                        <div className="widget-subheader" style={{ background: "#fbaf33", color: "#fff", width: "95%", margin: "0 auto", padding: "1px" }}>
+                            <h4 className="widget-title lighter smaller" style={{ margin: "5px" }}>Project Specifications</h4>
+                        </div>
+                        <div className="widget-body" style={{ width: "95%", margin: "0 auto" }}>
+                            <div className="widget-main " style={{ padding: "0 0px 8px 0px" }}>
+                                <div className="row">
+                                    <div className="profile-user-info profile-user-info-striped">
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Products  &amp; Associated Quantity</div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Productsandassociatedquantities"
+                                                    className="wd100"
+                                                    name="Productsandassociatedquantities"
+                                                    multiline
+                                                    rows={3}
+                                                    placeholder="Products & Associated Quantity"
+                                                    underlined
+                                                    value={this.state.items.Productsandassociatedquantities}
+                                                    disabled={true} />
+                                            </div>
+                                            <div className="profile-info-name">Capital Expenditure </div>
+                                            <div className="profile-info-value">
+                                                <TextField id="CapitalExpenditure" className="wd100" underlined label="" placeholder="Capital Expenditure" value={this.state.items.CapitalExpenditure} disabled suffix="US$MM" />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="profile-info-row" style={(this.state.items.ElectricityMW || this.state.items.ElectricityKW) ? {} : { display: 'none', padding: '0px 5px' }}>
-                                        <div className="profile-info-name">Electricity </div>
-                                        <div className="profile-info-value">
-                                            <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field" suffix="MW" value={this.state.items.ElectricityMW} disabled />
-                                            <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field" suffix="kVA" value={this.state.items.ElectricityKW} disabled />
-
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Natural Gas Usage</div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Naturalgas" className="wd100" suffix="mmscf/d" underlined value={this.state.items.Naturalgas} disabled />
+                                            </div>
+                                            <div className="profile-info-name">Electricity </div>
+                                            <div className="profile-info-value">
+                                                <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field wd100" suffix="MW" underlined value={this.state.items.ElectricityMW} disabled />
+                                                <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field wd100" suffix="kVA" underlined value={this.state.items.ElectricityKW} disabled />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="profile-info-row" style={(this.state.items.Water) ? {} : { display: 'none' }}>
-                                        <div className="profile-info-name">Water consumption</div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Water" label="" suffix="m³/month" value={this.state.items.Water} disabled />
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Water Consumption</div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Water" className="wd100" label="" suffix="m³/month" underlined value={this.state.items.Water} disabled />
+                                            </div>
+                                            <div className="profile-info-name">Land Requirements </div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Land" className="wd100" label="" suffix="hectares" underlined value={this.state.items.Land} disabled />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="profile-info-row" style={(this.state.items.Land) ? {} : { display: 'none' }}>
-                                        <div className="profile-info-name">Land requirement </div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Land" label="" suffix="hectares" value={this.state.items.Land} disabled />
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Port Requirements </div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Port" className="wd100"  multiline rows={3} label="" underlined value={this.state.items.Port} disabled />
+                                            </div>
+                                            <div className="profile-info-name">Warehousing Requirements </div>
+                                            <div className="profile-info-value">
+                                                <TextField id="WarehousingRequirements" className="wd100" multiline rows={3} label="" underlined value={this.state.items.WarehousingRequirements} disabled />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="profile-info-row" style={(this.state.items.Port) ? {} : { display: 'none' }}>
-                                        <div className="profile-info-name">Port requirements </div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Port" label="" value={this.state.items.Port} disabled />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row" style={(this.state.items.WarehousingRequirements) ? {} : { display: 'none' }}>
-                                        <div className="profile-info-name">Warehousing requirement </div>
-                                        <div className="profile-info-value">
-                                            <TextField id="WarehousingRequirements" label="" value={this.state.items.WarehousingRequirements} disabled />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row" style={(this.state.items.PotentialSaving) ? {} : { display: 'none' }
-                                    }>
-                                        <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
-                                        <div className="profile-info-value">
-                                            <TextField id="PotentialSaving" label="" value={this.state.items.PotentialSaving} disabled />
-                                        </div>
-                                    </div >
-
-                                    <div className="profile-info-row" style={(this.state.items.Other) ? {} : { display: 'none' }}>
-                                        <div className="profile-info-name">Other </div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Other" label="" value={this.state.items.Other} disabled />
+                                        <div className="profile-info-row" >
+                                            <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
+                                            <div className="profile-info-value">
+                                                <TextField id="PotentialSaving" className="wd100" label="" underlined value={this.state.items.PotentialSaving} disabled />
+                                            </div>
+                                            <div className="profile-info-name">Other </div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Other" className="wd100" label="" multiline rows={3} underlined value={this.state.items.Other} disabled />
+                                            </div>
                                         </div>
                                     </div >
                                 </div >
                             </div >
                         </div >
-                    </div >
 
-                    <div className="widget-body">
-                        <div className="widget-main padding-8">
-                            <div className="row">
-                                <div className="profile-user-info profile-user-info-striped">
 
-                                    <div className="profile-info-row" style={(this.state.isAdmin || (this.state.items.ActionTakenId || this.state.items.ActionTakenId == '1')) ? {} : { display: 'none' }}>
-                                        <div className="profile-info-name">Project Actions:</div>
-                                        <div className="profile-info-value">
-                                            <Dropdown id='ActionTaken'
-                                                defaultSelectedKey={this.state.ActionTaken}
-                                                placeholder="Select an Action"
-                                                label=''
-                                                disabled={(this.state.items.ActionTakenId !== '1' && this.state.isAdmin) ? false : true}
-                                                options={this.state.Actions.map((item: any) => { return { key: item.ID, text: item.Title }; })}
-                                                onChange={this._getChanges.bind(this, "ActionTaken")}
+                    </div>
 
-                                            />
+                    <div className="widget-Actions" style={(this.state.isAdmin || this.state.items.ActionTakenId) ? {} : { display: 'none' }}>
+                        <div className="widget-body">
+                            <div className="widget-main padding-8">
+                                <div className="row">
+                                    <div className="profile-user-info profile-user-info-striped">
+
+                                        <div className="profile-info-row" style={(this.state.isAdmin || (this.state.items.ActionTakenId || this.state.items.ActionTakenId == '1')) ? {} : { display: 'none' }}>
+                                            <div className="profile-info-name">Project Actions:</div>
+                                            <div className="profile-info-value">
+                                                <Dropdown id='ActionTaken'
+                                                    defaultSelectedKey={this.state.ActionTaken}
+                                                    placeholder="Select an Action"
+                                                    label=''
+                                                    disabled={(this.state.items.ActionTakenId !== '1' && this.state.isAdmin) ? false : true}
+                                                    options={this.state.Actions.map((item: any) => { return { key: item.ID, text: item.Title }; })}
+                                                    onChange={this._getChanges.bind(this, "ActionTaken")}
+
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="profile-info-row" style={this.state.pjtAccepted ? {} : { display: 'none' }}>
-                                        <div className="profile-info-name">Liaison Officer</div>
-                                        <div className="profile-info-value">
-                                            <PeoplePicker context={this.props.context}
-                                                personSelectionLimit={1}
-                                                groupName={""}
-                                                showtooltip={true}
-                                                isRequired={true}
-                                                ensureUser={true}
-                                                selectedItems={this._getPeoplePickerItems.bind(this)}
-                                                showHiddenInUI={false}
-                                                principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
-                                                resolveDelay={1500}
-                                            />
+                                        <div className="profile-info-row" style={this.state.pjtAccepted ? {} : { display: 'none' }}>
+                                            <div className="profile-info-name">Liaison Officer <span style={{ color: "red" }}>*</span></div>
+                                            <div className="profile-info-value">
+                                                <PeoplePicker context={this.props.context}
+                                                    personSelectionLimit={1}
+                                                    groupName={""}
+                                                    showtooltip={true}
+                                                    isRequired={true}
+                                                    ensureUser={true}
+                                                    selectedItems={this._getPeoplePickerItems.bind(this)}
+                                                    showHiddenInUI={false}
+                                                    principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
+                                                    resolveDelay={1500}
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Comments</div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Comments" label="" multiline rows={3} onBlur={this.handleChange.bind(this)} disabled={this.state.isAdmin ? false : true} />
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Comments</div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Comments" label="" underlined multiline rows={3} onBlur={this.handleChange.bind(this)} disabled={this.state.isAdmin ? false : true} value={this.state.items.Comments}/>
+                                            </div>
                                         </div>
-                                    </div>
 
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     {(this.state.listID && this.state.ItemId) ? (
                         <div className={styles.row}>
                             <ListItemAttachments listId={this.state.listID}
@@ -475,18 +483,11 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                         )
                     }
 
+                    <div className={styles.pullright}>
 
-                    <div className="pull-right mtp">
-
-                        <PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
+                        <PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()} style={(this.state.isAdmin && this.state.items.ActionTakenId !== '1') ? {} : { display: 'none' }}></PrimaryButton>
                         &nbsp;&nbsp;<PrimaryButton title="Cancel" text="Cancel" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
                     </div>
-
-                    {/* <div className={styles.row}>
-            <PrimaryButton text="Submit"
-                           onClick={this._submitform.bind(this)}></PrimaryButton>
-        </div> */}
-
 
                     <div>
                         <Dialog hidden={this.state.hideDialog}
@@ -494,7 +495,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                             dialogContentProps={{
                                 type: DialogType.normal,
                                 title: 'Project Confirmation',
-                                subText: 'Do you want to make this project Accepted for Facilitation?'
+                                subText: 'Please confirm that you wish to change the status to Accepted for Facilitation ?'
                             }}
                             modalProps={{
                                 isBlocking: true,
@@ -506,7 +507,19 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                             </DialogFooter>
                         </Dialog>
 
-                        <Spinner label="We are Working Please wait..."  style={(this.state.spinner) ? {} : { display: 'none' }}/>
+
+                    </div>
+                    <div>
+                        <Panel
+                            isOpen={this.state.spinner}
+                            type={PanelType.custom}
+                            headerText=""
+                            closeButtonAriaLabel="Close"
+                        >
+                            <div>
+                                <Spinner label="We are working, please wait..." ariaLive="assertive" labelPosition="right" />
+                            </div>
+                        </Panel>
                     </div>
 
 

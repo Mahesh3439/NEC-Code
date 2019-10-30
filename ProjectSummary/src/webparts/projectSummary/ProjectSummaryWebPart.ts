@@ -65,16 +65,17 @@ export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjec
   
         ReactDom.render(element, this.domElement);
       }
-      else if (this.properties.FormType == "Approvals") {
-        const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
-          ProjectApprovals,
-          {
-            context: this.context
-          }
-        );
+      // else if (this.properties.FormType == "Approvals") {
+      //   const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
+      //     ProjectApprovals,
+      //     {
+      //       context: this.context,
+      //       onDissmissPanel:()=>void
+      //     }
+      //   );
   
-        ReactDom.render(element, this.domElement);
-      }
+      //   ReactDom.render(element, this.domElement);
+      // }
   }
 
   protected onDispose(): void {
@@ -104,8 +105,8 @@ export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjec
                   options: [
                     { key: 'New', text: 'New' },
                     { key: 'Edit', text: 'Edit' },
-                    { key: 'ProjectSpace', text: 'ProjectSpace' },
-                    { key: 'Approvals', text: 'Approvals' }
+                    { key: 'ProjectSpace', text: 'ProjectSpace' }
+                    // { key: 'Approvals', text: 'Approvals' }
                    
                   ]
                 })

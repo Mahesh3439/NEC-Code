@@ -2,10 +2,12 @@ import * as React from 'react';
 import * as ReactDom from 'react-dom';
 import { Label, TextField, PrimaryButton, DefaultButton, DatePicker } from 'office-ui-fabric-react/lib';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
+import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 
 import styles from './ProjectSummary.module.scss';
 import { IProjectSummaryProps, IProjectSummaryState, IListItem, IProjectSpace } from './IProjectSummaryProps';
 import { escape } from '@microsoft/sp-lodash-subset';
+import ProjectApprovals from './ProjectApprovals';
 //import * as CustomJS from 'CustomJS';
 import * as $ from 'jQuery';
 import { SPComponentLoader } from '@microsoft/sp-loader';
@@ -23,10 +25,30 @@ import { IListFormService } from '../../../Commonfiles/Services/ICommonMethods';
 import '../../../Commonfiles/Services/customStyles.css';
 import { ListItemAttachments } from '@pnp/spfx-controls-react/lib/ListItemAttachments';
 import { sp, Web, ItemAddResult } from "@pnp/sp";
-import "@pnp/polyfill-ie11";
 
+export interface IApprovals {
 
-export default class ProjectSpace extends React.Component<IProjectSummaryProps, IProjectSummaryState, {}> {
+}
+export interface IProjectSpaceState {
+    items: IListItem;
+    disabled: boolean;
+    isAdmin: boolean;
+    hideDialog: boolean;
+    listID: string;
+    ItemId: number;
+    spinner: boolean;
+    Stages: any[];
+    Activities: any[];
+    Stage: number;
+    Activity: number;
+    liaisonEmail: string;
+    isLiaison: boolean;
+    startDate: Date;
+    Approvals: boolean;
+    showPanel: boolean;
+}
+
+export default class ProjectSpace extends React.Component<IProjectSummaryProps, IProjectSpaceState, {}> {
 
     private listFormService: IListFormService;
     private fields = [];
@@ -45,48 +67,42 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
         super(props);
         // Initiate the component state
         this.state = {
-            multiline: false,
-            startDate: null,
-            addUsers: [],
             items: {},
-            status: null,
+            startDate: null,
             disabled: false,
             isAdmin: false,
-            pjtAccepted: false,
-            Actions: [],
             Stages: [],
             Activities: [],
-            ActionTaken: null,
             Stage: null,
             Activity: null,
-            showState: false,
             hideDialog: true,
-            formType: "New",
-            pjtSpace: null,
             listID: null,
             ItemId: null,
             liaisonEmail: null,
-            stageStartDate: null,
-            isLiaison: false
+            isLiaison: false,
+            spinner: false,
+            Approvals: false,
+            showPanel: false
         };
-        SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js', {
-            globalExportsName: 'jQuery'
-        }).catch((error) => {
+        // SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js', {
+        //     globalExportsName: 'jQuery'
+        // }).catch((error) => {
 
-        }).then((): Promise<{}> => {
-            return SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.MultiFile.js', {
-                globalExportsName: 'jQuery'
-            });
-        }).catch((error) => {
+        // }).then((): Promise<{}> => {
+        //     return SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.MultiFile.js', {
+        //         globalExportsName: 'jQuery'
+        //     });
+        // }).catch((error) => {
 
-        });
+        // });        
 
 
         this.listFormService = new ListFormService(props.context.spHttpClient);
-        this.ItemId = Number(window.location.search.split("PID=")[1]);
+        // this.ItemId = Number(window.location.search.split("PID=")[1]);
+        this.ItemId = Number(this.props.context.pageContext.web.absoluteUrl.split("/ProjectSpace")[1]);
 
         if (this.ItemId) {
-            const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Projects')/items(${this.ItemId})?$select=*,LiaisonOfficer/Id,LiaisonOfficer/EMail&$expand=LiaisonOfficer`;
+            const restApi = `${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/GetByTitle('Projects')/items(${this.ItemId})?$select=*,LiaisonOfficer/Id,LiaisonOfficer/EMail&$expand=LiaisonOfficer`;
             this.listFormService._getListItem(this.props.context, restApi)
                 .then((response) => {
 
@@ -114,8 +130,8 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                         startDate: response.ProposedStartDate ? new Date(response.ProposedStartDate) : null,
                         Stage: response.StageId ? Number(response.StageId) : null,
                         Activity: response.ActivityId ? Number(response.ActivityId) : null,
-                        showState: vShowState,
-                        pjtSpace: response.ProjectURL
+                        Approvals: response.StageId == 7 ? true : false
+
                     });
                 });
 
@@ -138,14 +154,15 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                 }));
             });
 
-        const listrestApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Projects')`;
+        const listrestApi = `${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/GetByTitle('Projects')`;
         this.listFormService._getListItem(this.props.context, listrestApi)
             .then((response) => {
                 this.setState({
                     listID: response.Id
                 });
-            });
-
+            });       
+        
+        
         /**
           this.setState({
             loginUser:this.props.context.pageContext.user.email
@@ -174,9 +191,11 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
         this.fields.push(internalName);
         if (internalName == "Step") {
             this.StageKey = Number(item.key);
+
+
             this.setState({
                 Stage: Number(item.key),
-                stageStartDate: null
+                Approvals: item.key == 7 ? true : false
             });
             this._getActivities(item.key.toString());
         }
@@ -215,8 +234,8 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                 bodyContent[id] = value;
             }
         }
-
-        bodyContent["ProjectStatus"] = $('#StageId span')[0].textContent + "-" + $('#ActivityId span')[0].textContent
+        if (this.state.Stage !== null)
+            bodyContent["ProjectStatus"] = $('#StageId span')[0].textContent + "-" + $('#ActivityId span')[0].textContent;
 
         let body: string = JSON.stringify(bodyContent);
         return body;
@@ -224,7 +243,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
 
     //function to get the project Actions passing Webcontext and restAPI url
     public _getProjectState() {
-        const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Stages Master')/items`;
+        const restApi = `${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/GetByTitle('Stages Master')/items`;
         this.listFormService._getListitems(this.props.context, restApi)
             .then((response) => {
                 let items = response.value;
@@ -236,7 +255,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
 
     //function to get the project Actions passing Webcontext and restAPI url
     public _getActivities(StageId: string) {
-        const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Activities Master')/items?$filter= StageId eq ${StageId}`;
+        const restApi = `${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/GetByTitle('Activities Master')/items?$filter= StageId eq ${StageId}`;
         this.listFormService._getListitems(this.props.context, restApi)
             .then((response) => {
                 let items = response.value;
@@ -258,7 +277,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
         return this.listFormService._getListItemEntityTypeName(this.props.context, "Projects")
             .then(listItemEntityTypeName => {
                 let vbody: string = this._getupdateBodyContent(listItemEntityTypeName);
-                return this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Projects')/items(${this.ItemId})`, SPHttpClient.configurations.v1, {
+                return this.props.context.spHttpClient.post(`${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/getbytitle('Projects')/items(${this.ItemId})`, SPHttpClient.configurations.v1, {
                     headers: {
                         'Accept': 'application/json;odata=nometadata',
                         'Content-type': 'application/json;odata=verbose',
@@ -268,13 +287,14 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                     },
                     body: vbody
                 });
-            }).then((response: SPHttpClientResponse): void => {
+            })
+            .then((response: SPHttpClientResponse): void => {
                 let vStage = $('#StageId span')[0].textContent;
                 let Activity = $("#ActivityId span")[0].textContent;
                 // let stageDate = item.StageStartDate;
                 let vComments = (document.getElementById('Comments') as HTMLInputElement).value;
 
-                let web = new Web(`${this.state.items.ProjectURL}`);
+                let web = new Web(`${this.props.context.pageContext.web.absoluteUrl}`);
                 let list = web.lists.getByTitle("Activities").items.add({
                     Title: Activity,
                     Stage: vStage,
@@ -293,16 +313,26 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
     }
 
     private _submitform() {
-        this.updateData()
+        this.updateData();
 
     }
+
+    private _showPanel = () => {
+        this.setState({ showPanel: true });
+        //  ProjectApprovals._submitData();
+    }
+
+    private _hidePanel = () => {
+        this.setState({ showPanel: false });
+    }
+
 
     public render(): React.ReactElement<IProjectSummaryProps> {
         return (
             <div className={styles.projectSummary}>
-                <div className="widget-box widget-color-blue2" style={{display:"flow-root"}}>
+                <div className="widget-box widget-color-blue2" style={{ display: "flow-root" }}>
                     <div className="widget-header">
-                        <h4 className="widget-title lighter smaller">PROJECT SPACE</h4>
+                        <h4 className="widget-title lighter smaller">{this.state.items.Title}</h4>
                     </div>
 
                     <div className="widget-body left">
@@ -311,25 +341,24 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                 <div className="profile-user-info profile-user-info-striped">
 
                                     <div className="profile-info-row">
-                                        <div className="profile-info-name">Current Stage:</div>
+                                        <div className="profile-info-name">Current Stage</div>
                                         <div className="profile-info-value">
                                             <Dropdown id='StageId'
                                                 defaultSelectedKey={this.state.Stage}
-                                                placeholder="Select a state"
+                                                placeholder="Select Stage"
                                                 label=''
                                                 disabled={(this.state.isAdmin || this.state.isLiaison) ? false : true}
                                                 options={this.state.Stages.map((item: any) => { return { key: item.ID, text: item.Title }; })}
                                                 onChange={this._getChanges.bind(this, "Step")}
                                             />
-
                                         </div>
                                     </div>
                                     <div className="profile-info-row">
-                                        <div className="profile-info-name">Activity:</div>
+                                        <div className="profile-info-name">Activity</div>
                                         <div className="profile-info-value">
                                             <Dropdown id='ActivityId'
                                                 defaultSelectedKey={this.state.Activity}
-                                                placeholder="Select a Activity"
+                                                placeholder="Select Activity"
                                                 label=''
                                                 disabled={(this.state.isAdmin || this.state.isLiaison) ? false : true}
                                                 options={this.state.Activities.map((item: any) => { return { key: item.ID, text: item.Title }; })}
@@ -339,7 +368,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                     </div>
 
                                     <div className="profile-info-row">
-                                        <div className="profile-info-name">Next Stage:</div>
+                                        <div className="profile-info-name">Next Stage</div>
                                         <div className="profile-info-value">
                                             <Dropdown id='StageId'
                                                 defaultSelectedKey={this.state.Stage + 1}
@@ -372,7 +401,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
 
 
                                     <div className="profile-info-row">
-                                        <div className="profile-info-name">lates Comments</div>
+                                        <div className="profile-info-name">Latest Comments</div>
                                         <div className="profile-info-value">
                                             <TextField label="" multiline rows={3} onBlur={this.handleChange.bind(this)} disabled value={this.state.items.Comments} />
                                         </div>
@@ -381,14 +410,14 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                     <div className="profile-info-row">
                                         <div className="profile-info-name">Comments</div>
                                         <div className="profile-info-value">
-                                            <TextField id="Comments" label="" multiline rows={3} onBlur={this.handleChange.bind(this)} />
+                                            <TextField id="Comments" underlined label="" multiline rows={3} onBlur={this.handleChange.bind(this)} />
                                         </div>
                                     </div>
 
                                     <div className="profile-info-row">
                                         <div className="profile-info-name">Required Action</div>
                                         <div className="profile-info-value">
-                                            <TextField id="ReqAction" label="" onBlur={this.handleChange.bind(this)} />
+                                            <TextField id="ReqAction" underlined label="" onBlur={this.handleChange.bind(this)} disabled={(this.state.isAdmin || this.state.isLiaison) ? false : true} value={this.state.items.ReqAction} />
                                         </div>
                                     </div>
 
@@ -403,11 +432,11 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                         <div className="widget-main padding-8">
                             <div className="">
                                 <div className="profile-info-row">
-                                    <h5>{this.state.items.Title}</h5>
-                                </div>
-                                <div className="profile-info-row">
-                                    {this.state.items.ProjectDescription}
-                                </div>
+                                    <h5>
+                                    <a href={this.props.context.pageContext.site.absoluteUrl + '/SitePages/ProjectSummaryUpdate.aspx?PID=' + this.ItemId} target="_blank">Project Summary</a>
+                                    </h5>
+                                </div>                           
+
                                 <div className="profile-info-row">
                                     <label className="blod">Investors : </label>
                                     {this.state.items.Listofinvestors}
@@ -418,25 +447,55 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                 </div>
                                 <div className="profile-info-row">
                                     <label className="blod">CapEx : </label>
-                                    {this.state.items.CapitalExpenditure}
+                                    US$ {this.state.items.CapitalExpenditure}  million
                                 </div>
                                 <div className="profile-info-row">
                                     <label className="blod">Start Date : </label>
                                     {moment(this.state.startDate).format("DD/MM/YYYY")}
                                 </div>
-                                <div className="profile-info-row">
-                                    <label className="blod">Project Action : </label>
-                                    {'Accepted for Facilitation'}
+                                <div className="profile-info-row" style={this.state.items.Naturalgas ? {} : { display: 'none' }}>
+                                    <label className="blod">Natural Gas : </label>
+                                    {this.state.items.Naturalgas}
                                 </div>
+                                <div className="profile-info-row" style={this.state.items.ElectricityMW ? {} : { display: 'none' }}>
+                                    <label className="blod">Electricity : </label>
+                                    {this.state.items.ElectricityMW}
+                                </div>
+                                <div className="profile-info-row" style={this.state.items.Water ? {} : { display: 'none' }}>
+                                    <label className="blod">Water : </label>
+                                    {this.state.items.Water}
+                                </div>
+                                <div className="profile-info-row" style={this.state.items.Land ? {} : { display: 'none' }}>
+                                    <label className="blod">Land : </label>
+                                    {this.state.items.Land}
+                                </div>
+                                <div className="profile-info-row" style={this.state.items.Port ? {} : { display: 'none' }}>
+                                    <label className="blod">Port : </label>
+                                    {this.state.items.Port}
+                                </div>
+                                <div className="profile-info-row" style={this.state.items.WarehousingRequirements ? {} : { display: 'none' }}>
+                                    <label className="blod">Warehousing : </label>
+                                    {this.state.items.WarehousingRequirements}
+                                </div>
+                                <div className="profile-info-row" style={this.state.items.PotentialSaving ? {} : { display: 'none' }}>
+                                    <label className="blod">Potential Saving : </label>
+                                    {this.state.items.PotentialSaving}
+                                </div>
+                                <div className="profile-info-row" style={this.state.items.Other ? {} : { display: 'none' }}>
+                                    <label className="blod">Other : </label>
+                                    {this.state.items.Productsandassociatedquantities}
+                                </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div className="pull-right mtp">
+                    <PrimaryButton title="Approvals" text="Approvals" allowDisabledFocus onClick={() => this._showPanel()} style={(this.state.Stage == 7 && (this.state.isAdmin || this.state.isLiaison)) ? {} : { display: 'none' }}></PrimaryButton>
+                    {/* <PrimaryButton title="Approvals" text="Approvals" allowDisabledFocus onClick={() => function () { window.open(`${this.props.context.page.web.absoluteUrl}/sitepages/Approvals.asapx`, '_blank'); }}></PrimaryButton>} */}
+                    &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
 
-                    <PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
-                    &nbsp;&nbsp;<PrimaryButton title="Cancel" text="Cancel" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
                 </div>
 
                 {/* <div className={styles.row}>
@@ -464,7 +523,33 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                     </Dialog>
                 </div>
 
+                <div>
+                    <Panel
+                        isOpen={this.state.spinner}
+                        type={PanelType.custom}
+                        headerText=""
+                        closeButtonAriaLabel="Close"
+                    >
+                        <div id="loader"></div>
+                    </Panel>
+                </div>
 
+
+
+
+
+                <div>
+                    <Panel
+                        isOpen={this.state.showPanel}
+                        type={PanelType.large}
+                        onDismiss={this._hidePanel}
+                        isFooterAtBottom={true}
+                        headerText=""
+                        closeButtonAriaLabel="Close"
+                    >
+                        <ProjectApprovals context={this.props.context} onDissmissPanel={this._hidePanel} />
+                    </Panel>
+                </div>
             </div>
 
         );

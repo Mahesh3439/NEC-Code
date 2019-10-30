@@ -15,6 +15,9 @@ export interface IProjectSummarySubmitState {
   ActionTaken: number;
   hideDialog: boolean;
   pjtSpace:string;
+  spinner:boolean;
+  listID:string;
+  ItemId:number;
  
 }
 

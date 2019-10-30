@@ -1,7 +1,8 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
-import { Label, TextField, PrimaryButton, DefaultButton, DatePicker } from 'office-ui-fabric-react/lib';
+import { Label, TextField, PrimaryButton, DefaultButton, DatePicker, Spinner } from 'office-ui-fabric-react/lib';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
+import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 
 import styles from './ProjectSummary.module.scss';
 //import { IProjectSummaryProps, IProjectSummaryState, IListItem, IProjectSpace } from './IProjectSummaryProps';
@@ -22,8 +23,9 @@ import {
 import { ListFormService } from '../../../Commonfiles/Services/CommonMethods';
 import { IListFormService } from '../../../Commonfiles/Services/ICommonMethods';
 import { sp, Web } from "@pnp/sp";
-import "@pnp/polyfill-ie11";
+
 import '../../../Commonfiles/Services/customStyles.css';
+import { ListItemAttachments } from '@pnp/spfx-controls-react/lib/ListItemAttachments';
 
 
 export default class ProjectSummarySubmit extends React.Component<IProjectSummarySubmitProps, IProjectSummarySubmitState, {}> {
@@ -49,8 +51,11 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             Actions: [],
             ActionTaken: null,
             hideDialog: true,
-            pjtSpace: null
-           
+            pjtSpace: null,
+            spinner: false,
+            listID: null,
+            ItemId: null
+
         };
         SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js', {
             globalExportsName: 'jQuery'
@@ -62,7 +67,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             });
         }).catch((error) => {
 
-        })
+        });
 
         this.listFormService = new ListFormService(props.context.spHttpClient);
         this._getProjectActions();
@@ -82,6 +87,16 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
         setTimeout(function () {
             CustomJS.load();
         }, 3000);
+
+
+
+        const listrestApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Projects')`;
+        this.listFormService._getListItem(this.props.context, listrestApi)
+            .then((response) => {
+                this.setState({
+                    listID: response.Id
+                });
+            });
 
         /**
           this.setState({
@@ -160,8 +175,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
     private _getContentBody(listItemEntityTypeName: string) {
         let _fields = [...new Set(this.fields)];
 
-        if(window.navigator.userAgent.indexOf("Trident/") > 0)
-        {
+        if (window.navigator.userAgent.indexOf("Trident/") > 0) {
             _fields = _fields[0]._values;
         }
 
@@ -225,14 +239,34 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
     }
 
     private _buttonClear() {
+        (document.getElementById("Title") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("ProjectDescription") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("Listofinvestors") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("Title") as HTMLInputElement).defaultValue = "";
+
+        (document.getElementById("Productsandassociatedquantities") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("CapitalExpenditure") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("Naturalgas") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("ElectricityMW") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("ElectricityKW") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("Water") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("Land") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("Port") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("WarehousingRequirements") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("PotentialSaving") as HTMLInputElement).defaultValue = "";
+        (document.getElementById("Other") as HTMLInputElement).defaultValue = "";
+
         $("input").val("");
         $("textarea").val("");
+
     }
 
     public ItemAttachments() {
+      //  this.ItemId = 94;
+        console.log(this.ItemId);
         let attachemnts = $("#Attachments input:file");
         if (attachemnts.length > 1) {
-            var itemAttachments = []
+            var itemAttachments = [];
             $.each(attachemnts, function (index, file) {
                 let afile = file as HTMLInputElement;
                 if (afile.files.length > 0) {
@@ -243,16 +277,25 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 }
             });
 
-            let ListItem = sp.web.lists.getByTitle(`Projects`).items.getById(this.ItemId);
+            let siteURL = this.props.context.pageContext.web.absoluteUrl;  
+            let web = new Web(siteURL)
+            let ListItem = web.lists.getByTitle("Projects").items.getById(this.ItemId);
             ListItem.attachmentFiles.addMultiple(itemAttachments)
                 .then(r => {
                     console.log(r);
-                    alert("Successfully submitted....");
+                    this.setState({
+                        spinner: false
+                    });
+                    alert("Project Successfully submitted");
                     window.location.href = this.props.context.pageContext.web.absoluteUrl;
+                }).catch(function (err) {
+                    alert(err);
                 });
-
         }
         else {
+            this.setState({
+                spinner: false
+            });
             alert("Successfully submitted....");
             window.location.href = this.props.context.pageContext.web.absoluteUrl;
         }
@@ -284,23 +327,29 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
         let product = $("#Productsandassociatedquantities").val().toString().trim();
         let capital = $("#CapitalExpenditure").val().toString().trim();
 
-        if (pjtTitle == "")  {
-            return alert("Please Enter Project Title");            
+        if (pjtTitle == "") {
+            return alert("Please Enter Project Title");
         }
         if (pjtDesc == "") {
-            return alert("Please Enter Shot Description");            
+            return alert("Please Enter Short Description");
         }
         if (listInvst == "") {
-            return alert("Please Enter list of Investors");            
+            return alert("Please Enter list of Investors");
         }
         if (product == "") {
-            return alert("Please Enter Products & Associated Quantity");            
+            return alert("Please Enter Products & Associated Quantity");
         }
         if (capital == "") {
-            return alert("Please Enter Capital Expenditure");            
+            return alert("Please Enter Capital Expenditure");
+        }
+        if (this.ActionTakenKey == 1 && !this.liaisonofficer) {
+            alert("Liaison Officer is required");
+            return false;
         }
 
-
+        this.setState({
+            spinner: true
+        });
 
         this.SaveData()
             .then((resp) => {
@@ -311,7 +360,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 else {
                     this.ItemAttachments();
                 }
-            })
+            });
     }
 
     public ProjectSpace() {
@@ -319,12 +368,12 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
         let vsiteTitle = this.state.items.Title;
         let vsiteDesp = this.state.items.ProjectDescription;
 
-        this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl)
+        this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl,"")
             .then((responseJSON) => {
                 this.fields.push("ProjectURL");
                 this.setState({
                     pjtSpace: responseJSON.ServerRelativeUrl
-                })
+                });
 
                 this.listFormService._getListItemEntityTypeName(this.props.context, "Projects")
                     .then(listItemEntityTypeName => {
@@ -347,7 +396,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                     }).then((resp) => {
                         console.log(resp);
                         this.ItemAttachments();
-                    })
+                    });
             });
     }
 
@@ -358,215 +407,239 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
 
                 <div className="widget-box widget-color-blue2">
                     <div className="widget-header">
-                        <h4 className="widget-title lighter smaller">PROJECT SUMMARY </h4>
+                        <h4 className="widget-title lighter smaller">Submit Project Summary </h4>
                     </div>
-                    <div className="widget-body">
-                        <div className="widget-main padding-8">
-                            <div className="row">
-                                <div className="profile-user-info profile-user-info-striped">
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Name of Project <span style={{color:"red"}}>*</span></div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Title" placeholder="Project Title" onBlur={this.handleChange.bind(this)} />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Short Description <span style={{color:"red"}}>*</span></div>
-                                        <div className="profile-info-value">
-                                            <TextField id="ProjectDescription" multiline rows={3} onBlur={this.handleChange.bind(this)} />
-                                        </div>
-                                    </div>
+                    <div className="widget-Summary">
 
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">List of investors / Partners <span style={{color:"red"}}>*</span></div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Listofinvestors" placeholder="List of Investors/Partners" onBlur={this.handleChange.bind(this)} />
+                        <div className="widget-body">
+                            <div className="widget-main padding-8">
+                                <div className="row">
+                                    <div className="profile-user-info profile-user-info-striped">
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Name of Project <span style={{ color: "red" }}>*</span></div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Title" underlined placeholder="Project Title" onBlur={this.handleChange.bind(this)} />
+                                            </div>
+                                        </div>
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Short Description <span style={{ color: "red" }}>*</span></div>
+                                            <div className="profile-info-value">
+                                                <TextField id="ProjectDescription" underlined multiline rows={3} onBlur={this.handleChange.bind(this)} />
+                                            </div>
+                                        </div>
+
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">List of investors / Partners <span style={{ color: "red" }}>*</span></div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Listofinvestors" underlined placeholder="List of Investors/Partners" onBlur={this.handleChange.bind(this)} />
+                                            </div>
+                                        </div>
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Proposed Start Date </div>
+                                            <div className="profile-info-value">
+                                                <DatePicker placeholder="Select a start date..."
+                                                    id="ProposedStartDate"
+                                                    onSelectDate={this._onSelectDate}
+                                                    value={this.state.startDate}
+                                                    formatDate={this._onFormatDate}
+                                                    minDate={new Date()}
+                                                    underlined
+                                                    isMonthPickerVisible={false} />
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="widget-subheader" style={{ background: "#fbaf33", color: "#fff", width: "95%", margin: "0 auto", padding: "1px" }}>
+                            <h4 className="widget-title lighter smaller" style={{ margin: "5px" }}>Project Specifications</h4>
+                        </div>
+                        <div className="widget-body" style={{ width: "95%", margin: "0 auto" }}>
+                            <div className="widget-main " style={{ padding: "0 0px 8px 0px" }}>
+                                <div className="row">
+                                    <div className="profile-user-info profile-user-info-striped">
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Products  &amp; Associated Quantity <span style={{ color: "red" }}>*</span></div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Productsandassociatedquantities"
+                                                    className="wd100"
+                                                    name="Productsandassociatedquantities"
+                                                    multiline
+                                                    rows={3}
+                                                    underlined
+                                                    placeholder="Products & Associated Quantity"
+                                                    onBlur={this.handleChange.bind(this)}
+                                                />
+                                            </div>
+
+                                            <div className="profile-info-name">Capital Expenditure <span style={{ color: "red" }}>*</span></div>
+                                            <div className="profile-info-value">
+                                                <TextField className="wd100" id="CapitalExpenditure" underlined placeholder="Capital Expenditure" onBlur={this.handleChange.bind(this)} suffix="US$MM" />
+                                            </div>
+                                        </div>
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Natural Gas Usage</div>
+                                            <div className="profile-info-value">
+                                                <TextField className="wd100" id="Naturalgas" underlined onBlur={this.handleChange.bind(this)} suffix="mmscf/d" />
+                                            </div>
+
+                                            <div className="profile-info-name">Electricity </div>
+                                            <div className="profile-info-value">
+                                                <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field" underlined onBlur={this.handleChange.bind(this)} suffix="MW" />
+                                                <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field" underlined onBlur={this.handleChange.bind(this)} suffix="kVA" />
+
+                                            </div>
+                                        </div>
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Water Consumption</div>
+                                            <div className="profile-info-value">
+                                                <TextField className="wd100" id="Water" label="" underlined onBlur={this.handleChange.bind(this)} suffix="m³/month" />
+                                            </div>
+
+                                            <div className="profile-info-name">Land Requirements </div>
+                                            <div className="profile-info-value">
+                                                <TextField className="wd100" id="Land" label="" underlined onBlur={this.handleChange.bind(this)} suffix="hectares" />
+                                            </div>
+                                        </div>
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Port Requirements </div>
+                                            <div className="profile-info-value">
+                                                <TextField className="wd100" id="Port" label="" multiline rows={3} underlined onBlur={this.handleChange.bind(this)} />
+                                            </div>
+
+                                            <div className="profile-info-name">Warehousing Requirements </div>
+                                            <div className="profile-info-value">
+                                                <TextField className="wd100" id="WarehousingRequirements" multiline rows={3} label="" underlined onBlur={this.handleChange.bind(this)} />
+                                            </div>
+                                        </div>
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
+                                            <div className="profile-info-value">
+                                                <TextField className="wd100" id="PotentialSaving" label="" underlined onBlur={this.handleChange.bind(this)} />
+                                            </div>
+
+                                            <div className="profile-info-name">Other </div>
+
+                                            <div className="profile-info-value">
+
+                                                <TextField className="wd100" id="Other" multiline rows={3} label="" underlined onBlur={this.handleChange.bind(this)} />
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Products  &amp; Associated Quantity <span style={{color:"red"}}>*</span></div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Productsandassociatedquantities"
-                                                name="Productsandassociatedquantities"
-                                                multiline
-                                                rows={3}
-                                                placeholder="Products & Associated Quantity"
-                                                onBlur={this.handleChange.bind(this)}
-                                            />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div className="widget-Actions">
+                        <div className="widget-body">
+                            <div className="widget-main padding-8">
+                                <div className="row">
+                                    <div className="profile-user-info profile-user-info-striped">
+
+                                        <div className="profile-info-row" style={(this.state.isAdmin) ? {} : { display: 'none' }}>
+                                            <div className="profile-info-name">Project Actions:</div>
+                                            <div className="profile-info-value">
+                                                <Dropdown
+                                                    id='ActionTaken'
+                                                    defaultSelectedKey={this.state.ActionTaken}
+                                                    placeholder="Select an Action"
+                                                    disabled={this.state.items.ActionTakenId == '1' ? true : false}
+                                                    options={this.state.Actions.map((item: any) => { return { key: item.ID, text: item.Title }; })}
+                                                    onChange={this._getChanges.bind(this, "ActionTaken")}
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Capital Expenditure <span style={{color:"red"}}>*</span></div>
-                                        <div className="profile-info-value">
-                                            <TextField id="CapitalExpenditure" placeholder="Capital Expenditure" onBlur={this.handleChange.bind(this)} suffix="US$MM" />
+                                        <div className="profile-info-row" style={(this.state.isAdmin) ? {} : { display: 'none' }}>
+                                            <div className="profile-info-name">Investor</div>
+                                            <div className="profile-info-value">
+                                                <PeoplePicker context={this.props.context}
+                                                    titleText=""
+                                                    personSelectionLimit={1}
+                                                    groupName={""}
+                                                    showtooltip={true}
+                                                    isRequired={true}
+                                                    ensureUser={true}
+                                                    selectedItems={this._getInvestorItems.bind(this)}
+                                                    showHiddenInUI={false}
+                                                    principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
+                                                    resolveDelay={1500}
+                                                    defaultSelectedUsers={[`${this.props.context.pageContext.user.email}`]} />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Proposed Start Date </div>
-                                        <div className="profile-info-value">
-                                            <DatePicker placeholder="Select a start date..."
-                                                id="ProposedStartDate"
-                                                onSelectDate={this._onSelectDate}
-                                                value={this.state.startDate}
-                                                formatDate={this._onFormatDate}
-                                                minDate={new Date()}
-                                                isMonthPickerVisible={false} />
+                                        <div className="profile-info-row" style={this.state.pjtAccepted ? {} : { display: 'none' }}>
+                                            <div className="profile-info-name">Liaison Officer</div>
+                                            <div className="profile-info-value">
+                                                <PeoplePicker context={this.props.context}
+                                                    titleText=""
+                                                    personSelectionLimit={1}
+                                                    groupName={""}
+                                                    showtooltip={true}
+                                                    isRequired={true}
+                                                    disabled={this.state.isAdmin ? false : true}
+                                                    ensureUser={true}
+                                                    selectedItems={this._getPeoplePickerItems.bind(this)}
+                                                    showHiddenInUI={false}
+                                                    principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
+                                                    resolveDelay={1500} />
+                                            </div>
                                         </div>
+
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Comments</div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Comments" underlined label="" multiline rows={3} onBlur={this.handleChange.bind(this)} />
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="widget-subheader" style={{ background: "#fbaf33", color: "#fff", width: "95%", margin: "0 auto", padding: "1px" }}>
-                        <h4 className="widget-title lighter smaller" style={{ margin: "5px" }}>Project Specifications</h4>
-                    </div>
-                    <div className="widget-body" style={{ width: "95%", margin: "0 auto" }}>
-                        <div className="widget-main " style={{ padding: "0 0px 8px 0px" }}>
-                            <div className="row">
-                                <div className="profile-user-info profile-user-info-striped">
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Natural Gas</div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Naturalgas" onBlur={this.handleChange.bind(this)} suffix="mmscf/d" />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                    </div>
-                                    <div className="profile-info-row">
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Electricity </div>
-                                        <div className="profile-info-value">
-                                            <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field" onBlur={this.handleChange.bind(this)} suffix="MW" />
-                                            <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field" onBlur={this.handleChange.bind(this)} suffix="kVA" />
-
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Water consumption</div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Water" label="" onBlur={this.handleChange.bind(this)} suffix="m³/month" />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Land requirement </div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Land" label="" onBlur={this.handleChange.bind(this)} suffix="hectares" />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Port requirements </div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Port" label="" onBlur={this.handleChange.bind(this)} />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Warehousing requirement </div>
-                                        <div className="profile-info-value">
-                                            <TextField id="WarehousingRequirements" label="" onBlur={this.handleChange.bind(this)} />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
-                                        <div className="profile-info-value">
-                                            <TextField id="PotentialSaving" label="" onBlur={this.handleChange.bind(this)} />
-                                        </div>
-                                    </div>
-
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Other </div>
-
-                                        <div className="profile-info-value">
-
-                                            <TextField id="Other" label="" onBlur={this.handleChange.bind(this)} />
-                                        </div>
-                                    </div>
-                                </div>
+                    <div>
+                        <div className="profile-info-row">
+                            <div className="profile-info-name"> Upload Attachments </div>
+                            <div id='txtAttachemtns' style={{ margin: "5px" }}>
+                                <input id='Attachments' type='file' className='multy'></input>
                             </div>
                         </div>
                     </div>
 
 
-                    <div className="widget-body">
-                        <div className="widget-main padding-8">
-                            <div className="row">
-                                <div className="profile-user-info profile-user-info-striped">
+                    {(this.state.listID && this.state.ItemId) ? (
+                        <div className={styles.row}>
+                            <ListItemAttachments listId={this.state.listID}
+                                itemId={this.state.ItemId}
+                                context={this.props.context}
+                                disabled={false} />
+                        </div>) : (
+                            <div></div>
+                        )
+                    }
+                </div>
 
-                                    <div className="profile-info-row" style={(this.state.isAdmin) ? {} : { display: 'none' }}>
-                                        <div className="profile-info-name">Project Actions:</div>
-                                        <div className="profile-info-value">
-                                            <Dropdown
-                                                id='ActionTaken'
-                                                defaultSelectedKey={this.state.ActionTaken}
-                                                placeholder="Select an Action"
-                                                disabled={this.state.items.ActionTakenId == '1' ? true : false}
-                                                options={this.state.Actions.map((item: any) => { return { key: item.ID, text: item.Title }; })}
-                                                onChange={this._getChanges.bind(this, "ActionTaken")}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row" style={(this.state.isAdmin) ? {} : { display: 'none' }}>
-                                        <div className="profile-info-name">Investor</div>
-                                        <div className="profile-info-value">
-                                            <PeoplePicker context={this.props.context}
-                                                titleText=""
-                                                personSelectionLimit={1}
-                                                groupName={""}
-                                                showtooltip={true}
-                                                isRequired={true}
-                                                ensureUser={true}
-                                                selectedItems={this._getInvestorItems.bind(this)}
-                                                showHiddenInUI={false}
-                                                principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
-                                                resolveDelay={1500}
-                                                defaultSelectedUsers={[`${this.props.context.pageContext.user.email}`]} />
-                                        </div>
-                                    </div>
-                                    <div className="profile-info-row" style={this.state.pjtAccepted ? {} : { display: 'none' }}>
-                                        <div className="profile-info-name">Liaison Officer</div>
-                                        <div className="profile-info-value">
-                                            <PeoplePicker context={this.props.context}
-                                                titleText=""
-                                                personSelectionLimit={1}
-                                                groupName={""}
-                                                showtooltip={true}
-                                                isRequired={true}
-                                                disabled={this.state.isAdmin ? false : true}
-                                                ensureUser={true}
-                                                selectedItems={this._getPeoplePickerItems.bind(this)}
-                                                showHiddenInUI={false}
-                                                principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
-                                                resolveDelay={1500} />
-                                        </div>
-                                    </div>
-
-                                    <div className="profile-info-row">
-                                        <div className="profile-info-name">Comments</div>
-                                        <div className="profile-info-value">
-                                            <TextField id="Comments" label="" multiline rows={3} onBlur={this.handleChange.bind(this)} />
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div className={styles.pullright}>
+                    <PrimaryButton title="Clear" text="Clear" allowDisabledFocus onClick={() => this._buttonClear()}></PrimaryButton>
+                    &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
+                    &nbsp;&nbsp;<PrimaryButton title="Cancel" text="Cancel" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
                 </div>
 
                 <div>
-                    <div className="profile-info-row">
-                        <div id='txtAttachemtns'>
-                            <input id='Attachments' type='file' className='multy'></input>
+                    <Panel
+                        isOpen={this.state.spinner}
+                        type={PanelType.custom}
+                        headerText=""
+                        closeButtonAriaLabel="Close"
+                    >
+                        <div>
+                            <Spinner label="We are working, please wait..." ariaLive="assertive" labelPosition="right" />
                         </div>
-                    </div>
-
-                    <div className="pull-right mtp">
-                        <PrimaryButton title="Clear" text="Clear" allowDisabledFocus onClick={() => this._buttonClear()}></PrimaryButton>
-                        &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
-                        &nbsp;&nbsp;<PrimaryButton title="Cancel" text="Cancel" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
-                    </div>
-
+                    </Panel>
                 </div>
 
                 <div>
@@ -575,8 +648,8 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                         onDismiss={this._closeDialog}
                         dialogContentProps={{
                             type: DialogType.normal,
-                            title: 'Porject Conformation',
-                            subText: 'Do you want to make this project Accepted for Facilitation?'
+                            title: 'Project Confirmation',
+                            subText: 'Please confirm that you wish to change the status to Accepted for Facilitation?'
                         }}
                         modalProps={{
                             isBlocking: true,
@@ -590,6 +663,6 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                     </Dialog>
                 </div>
             </div>
-        )
+        );
     }
 }

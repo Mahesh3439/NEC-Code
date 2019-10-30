@@ -14,7 +14,7 @@
     @include ms-Grid-row;
     //@include ms-fontColor-white;
     // background-color: $ms-color-themeDark;
-    padding: 20px;
+    padding: 5px 20px;
   }
 
   .column {
@@ -98,7 +98,9 @@
     margin: 5px;
   }
 
-  
+  .pullright {
+    float: right;
+  }
 
   
   .Requirement
@@ -121,13 +123,7 @@
 }
 }
 
-@media only screen and (min-width: 769px) {
-  [class^="ms-Label"]
-  {
-    width: 20% !important;
-    float: left !important;
-  }
-
+@media only screen and (min-width: 769px) { 
   [class^="Electricity"]
   {
     width: 36% !important;

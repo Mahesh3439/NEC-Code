@@ -2,7 +2,7 @@ import * as React from 'react';
 import styles from './PromotionResponse.module.scss';
 import { IPromotionResponseProps, IPromotionResponseState, IListItem } from './IPromotionResponseProps';
 import { escape } from '@microsoft/sp-lodash-subset';
-import { Label, TextField, PrimaryButton, DefaultButton, DatePicker, Checkbox } from 'office-ui-fabric-react/lib';
+import { Label, TextField, PrimaryButton, DefaultButton, DatePicker, Checkbox, Spinner } from 'office-ui-fabric-react/lib';
 import { SPComponentLoader } from '@microsoft/sp-loader';
 import {
   Dropdown,
@@ -11,6 +11,7 @@ import {
   IDropdownOption
 } from "office-ui-fabric-react/lib/Dropdown";
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
+import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 
 import { ListFormService } from '../../../Commonfiles/Services/CommonMethods';
 import { IListFormService } from '../../../Commonfiles/Services/ICommonMethods';
@@ -29,6 +30,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
   public PType: string;
   public liaisonofficer: number = null;
   public responseTitle: string;
+  public prmStatus:string;
 
 
   constructor(props: IPromotionResponseProps) {
@@ -49,7 +51,9 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
       pjtSpace: null,
       PromotionType: null,
       listID: null,
-      ItemId: null
+      ItemId: null,
+      spinner: false,
+      disable: true
     };
     SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js', {
       globalExportsName: 'jQuery'
@@ -75,13 +79,39 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
       else if (this.PType == "RFPP")
         this.responseTitle = "RFPP Responses";
 
-      const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('${this.responseTitle}')/items(${this.PItemId})`;
+      const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('${this.responseTitle}')/items(${this.PItemId})?$select=*,Author/EMail&$expand=Author`;
       this.listFormService._getListItem(this.props.context, restApi)
         .then((response) => {
+          var vdisable = true;
+          if ((this.props.context.pageContext.user.email == response.Author.EMail) && (new Date() <= new Date(response.DeadlineDate))) {
+            vdisable = false;
+          }
+
+          
+          if (this.PType == "EOI")
+            this.prmStatus = response.EOIStatus;
+          else if (this.PType == "RFPP")
+            this.prmStatus = response.RFPPStatus;
+
+
           this.setState({
             items: response,
-            ItemId: this.PItemId
+            ItemId: this.PItemId,
+            disable: vdisable
+           
           });
+        });
+
+      this.listFormService._getloginusergroups(this.props.context)
+        .then((response) => {
+          response.Groups.map(((item: any, inc) => {
+            if (item.Title === "IF Admin") {
+              this.setState({
+                isAdmin: true
+              });
+              return false;
+            }
+          }));
         });
 
 
@@ -171,14 +201,13 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
       },
     };
 
-    if(window.navigator.userAgent.indexOf("Trident/") > 0)
-    {
-        _fields = _fields[0]._values;
+    if (window.navigator.userAgent.indexOf("Trident/") > 0) {
+      _fields = _fields[0]._values;
     }
 
     for (let id of _fields) {
       if (id == "withPjtSpace") {
-        bodyContent["PjtSpace"] = 1;
+        bodyContent["PjtSpace"] = "true";
       }
       else if (id == "EOIStatus" || id == "RFPPStatus") {
         bodyContent[id] = this.state.status;
@@ -230,13 +259,25 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
   }
 
   private _submitform() {
+
+    if(this.state.status == "Proceed with Project Development" && !this.liaisonofficer)
+    {
+      alert("Liaison Officer is required");
+      return false;
+    }
+    
+
+    this.setState({
+      spinner: true
+    });
+
     if (this.state.crtPjtSpace == true) {
       this._createProject()
         .then((resp) => {
           let itemID = resp.Id;
           let vsiteurl = `ProjectSpace${itemID}`;
           let vsiteTitle = resp.Title;
-          this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl)
+          this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl,"")
             .then((responseJSON) => {
               this.setState({
                 pjtSpace: responseJSON.ServerRelativeUrl
@@ -313,7 +354,11 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
         });
       }).then((resp) => {
         console.log(resp);
-        alert("Updated Successfully...");
+        this.setState({
+          spinner: false
+        });
+        alert("Status updated successfully.");
+        window.history.back();
       });
 
 
@@ -325,66 +370,126 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
 
         <div className="widget-box widget-color-blue2">
           <div className="widget-header">
-            <h4 className="widget-title lighter smaller">UPDATE PROMOTION INTEREST </h4>
+            <h4 className="widget-title lighter smaller">Promotion Response Review</h4>
           </div>
-          <div className="widget-body">
-            <div className="widget-main padding-8">
-              <div className="row">
-                <div className="profile-user-info profile-user-info-striped">
-                  <div className="profile-info-row">
-                    <div className="profile-info-name">Promotion Title</div>
-                    <div className="profile-info-value">
-                      <TextField id="Title" placeholder="Project Title" value={this.state.items.Title} disabled />
-                    </div>
-                  </div>
-                  <div className="profile-info-row">
-                    <div className="profile-info-name">Project Title</div>
-                    <div className="profile-info-value">
-                      <TextField id="PjtTitle" value={this.state.items.PjtTitle} disabled />
-                    </div>
-                  </div>
-                  <div className="profile-info-row">
-                    <div className="profile-info-name">Short Description </div>
-                    <div className="profile-info-value">
-                      <TextField id="ProjectDescription" multiline rows={3} value={this.state.items.ProjectDescription} disabled />
-                    </div>
-                  </div>
 
-                  <div className="profile-info-row">
-                    <div className="profile-info-name">List of investors / Partners</div>
-                    <div className="profile-info-value">
-                      <TextField id="Listofinvestors" placeholder="List of Investors/Partners" value={this.state.items.Listofinvestors} disabled />
+          <div className="widget-Summary">
+
+            <div className="widget-body">
+              <div className="widget-main padding-8">
+                <div className="row">
+                  <div className="profile-user-info profile-user-info-striped">
+                    <div className="profile-info-row">
+                      <div className="profile-info-name">Promotion Title</div>
+                      <div className="profile-info-value">
+                        <TextField id="Title" underlined placeholder="Project Title" value={this.state.items.Title} disabled={this.state.disable} />
+                      </div>
+                    </div>
+                    <div className="profile-info-row">
+                      <div className="profile-info-name">Project Title</div>
+                      <div className="profile-info-value">
+                        <TextField id="PjtTitle" underlined value={this.state.items.PjtTitle} disabled={this.state.disable} />
+                      </div>
+                    </div>
+                    <div className="profile-info-row">
+                      <div className="profile-info-name">Short Description </div>
+                      <div className="profile-info-value">
+                        <TextField id="ProjectDescription" underlined multiline rows={3} value={this.state.items.ProjectDescription} disabled={this.state.disable} />
+                      </div>
+                    </div>
+
+                    <div className="profile-info-row">
+                      <div className="profile-info-name">List of investors / Partners</div>
+                      <div className="profile-info-value">
+                        <TextField id="Listofinvestors" underlined placeholder="List of Investors/Partners" value={this.state.items.Listofinvestors} disabled={this.state.disable} />
+                      </div>
+                    </div>
+                    <div className="profile-info-row">
+                      <div className="profile-info-name">Proposed Start Date </div>
+                      <div className="profile-info-value">
+                        <DatePicker placeholder=""
+                          id="ProposedStartDate"
+                          onSelectDate={this._onSelectDate}
+                          value={this.state.items.ProposedStartDate ? new Date(this.state.items.ProposedStartDate) : null}
+                          formatDate={this._onFormatDate}
+                          minDate={new Date(2000, 12, 30)}
+                          isMonthPickerVisible={false}
+                          disabled={this.state.disable} />
+                      </div>
                     </div>
                   </div>
-                  <div className="profile-info-row">
-                    <div className="profile-info-name">Products  &amp; Associated Quantity</div>
-                    <div className="profile-info-value">
-                      <TextField id="Productsandassociatedquantities"
-                        name="Productsandassociatedquantities"
-                        multiline
-                        rows={3}
-                        placeholder="Products & Associated Quantity"
-                        value={this.state.items.Productsandassociatedquantities}
-                        disabled={true} />
+                </div>
+              </div>
+            </div>
+
+            <div className="widget-subheader" style={{ background: "#fbaf33", color: "#fff", width: "95%", margin: "0 auto", padding: "1px" }}>
+              <h4 className="widget-title lighter smaller" style={{ margin: "5px" }}>Project Specifications</h4>
+            </div>
+            <div className="widget-body" style={{ width: "95%", margin: "0 auto" }}>
+              <div className="widget-main " style={{ padding: "0 0px 8px 0px" }}>
+                <div className="row">
+                  <div className="profile-user-info profile-user-info-striped">
+                    <div className="profile-info-row">
+                      <div className="profile-info-name">Products  &amp; Associated Quantity</div>
+                      <div className="profile-info-value">
+                        <TextField id="Productsandassociatedquantities"
+                          name="Productsandassociatedquantities"
+                          className="wd100"
+                          multiline
+                          rows={3}
+                          underlined
+                          placeholder="Products & Associated Quantity"
+                          value={this.state.items.Productsandassociatedquantities}
+                          disabled={this.state.disable} />
+                      </div>
+
+                      <div className="profile-info-name">Capital Expenditure </div>
+                      <div className="profile-info-value">
+                        <TextField id="CapitalExpenditure" className="wd100" label="" underlined placeholder="Capital Expenditure" value={this.state.items.CapitalExpenditure} disabled={this.state.disable} suffix="US$MM" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="profile-info-row">
-                    <div className="profile-info-name">Capital Expenditure </div>
-                    <div className="profile-info-value">
-                      <TextField id="CapitalExpenditure" label="" placeholder="Capital Expenditure" value={this.state.items.CapitalExpenditure} disabled />
+
+                    <div className="profile-info-row">
+                      <div className="profile-info-name">Natural Gas Requirements</div>
+                      <div className="profile-info-value">
+                        <TextField id="Naturalgas" suffix="mmscf/d" className="wd100" underlined value={this.state.items.Naturalgas} disabled={this.state.disable} />
+                      </div>
+                      <div className="profile-info-name">Electricity </div>
+                      <div className="profile-info-value">
+                        <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field wd100" suffix="MW" underlined value={this.state.items.ElectricityMW} disabled={this.state.disable} />
+                        <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field wd100" suffix="kVA" underlined value={this.state.items.ElectricityKW} disabled={this.state.disable} />
+
+                      </div>
                     </div>
-                  </div>
-                  <div className="profile-info-row">
-                    <div className="profile-info-name">Proposed Start Date </div>
-                    <div className="profile-info-value">
-                      <DatePicker placeholder=""
-                        id="ProposedStartDate"
-                        onSelectDate={this._onSelectDate}
-                        value={this.state.items.ProposedStartDate ? new Date(this.state.items.ProposedStartDate) : null}
-                        formatDate={this._onFormatDate}
-                        minDate={new Date(2000, 12, 30)}
-                        isMonthPickerVisible={false}
-                        disabled={true} />
+                    <div className="profile-info-row">
+                      <div className="profile-info-name">Water Consumption</div>
+                      <div className="profile-info-value">
+                        <TextField id="Water" className="wd100" label="" suffix="m³/month" underlined value={this.state.items.Water} disabled={this.state.disable} />
+                      </div>
+                      <div className="profile-info-name">Land Requirement </div>
+                      <div className="profile-info-value">
+                        <TextField id="Land" className="wd100" label="" suffix="hectares" underlined value={this.state.items.Land} disabled={this.state.disable} />
+                      </div>
+                    </div>
+                    <div className="profile-info-row">
+                      <div className="profile-info-name">Port Requirements </div>
+                      <div className="profile-info-value">
+                        <TextField id="Port" className="wd100" label="" multiline rows={3} underlined value={this.state.items.Port} disabled={this.state.disable} />
+                      </div>
+                      <div className="profile-info-name">Warehousing Requirement </div>
+                      <div className="profile-info-value">
+                        <TextField id="WarehousingRequirements" multiline rows={3} className="wd100" label="" underlined value={this.state.items.WarehousingRequirements} disabled={this.state.disable} />
+                      </div>
+                    </div>
+                    <div className="profile-info-row">
+                      <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
+                      <div className="profile-info-value">
+                        <TextField id="PotentialSaving" className="wd100" label="" underlined value={this.state.items.PotentialSaving} disabled={this.state.disable} />
+                      </div>
+                      <div className="profile-info-name">Other </div>
+                      <div className="profile-info-value">
+                        <TextField id="Other" className="wd100" label="" multiline rows={3} underlined value={this.state.items.Other} disabled={this.state.disable} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -392,158 +497,101 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
             </div>
           </div>
 
-          <div className="widget-subheader" style={{ background: "#fbaf33", color: "#fff", width: "95%", margin: "0 auto", padding: "1px" }}>
-            <h4 className="widget-title lighter smaller" style={{ margin: "5px" }}>Project Specifications</h4>
-          </div>
-          <div className="widget-body" style={{ width: "95%", margin: "0 auto" }}>
-            <div className="widget-main " style={{ padding: "0 0px 8px 0px" }}>
-              <div className="row">
-                <div className="profile-user-info profile-user-info-striped">
-                  <div className="profile-info-row" style={this.state.items.Naturalgas ? {} : { display: 'none' }}>
-                    <div className="profile-info-name">Natural Gas</div>
-                    <div className="profile-info-value">
-                      <TextField id="Naturalgas" suffix="mmscf/d" value={this.state.items.Naturalgas} disabled />
+          <div className="widget-Actions" style={((this.state.isAdmin) || this.prmStatus) ? {} : { display: 'none' }}>
+            <div className="widget-body">
+              <div className="widget-main padding-8">
+                <div className="row">
+                  <div className="profile-user-info profile-user-info-striped">
+                    <div className="profile-info-row" style={this.prmStatus ? {} : { display: 'none' }}>
+                      <div className="profile-info-name">Status</div>
+                      <div className="profile-info-value">
+                      <TextField label="" underlined disabled value={this.prmStatus} />
+                      </div>
                     </div>
-                  </div>
-                  <div className="profile-info-row" style={(this.state.items.ElectricityMW || this.state.items.ElectricityKW) ? {} : { display: 'none', padding: '0px 5px' }}>
-                    <div className="profile-info-name">Electricity </div>
-                    <div className="profile-info-value">
-                      <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field" suffix="MW" value={this.state.items.ElectricityMW} disabled />
-                      <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field" suffix="kVA" value={this.state.items.ElectricityKW} disabled />
+                    <div className="profile-info-row" style={(this.PType == "EOI" && !this.prmStatus) ? {} : { display: 'none' }}>
+                      <div className="profile-info-name">Status</div>
+                      <div className="profile-info-value">
+                        <Dropdown label=""
+                          id="EOIStatus"
+                          onChange={this._getChanges.bind(this, "EOIStatus")}
+                          placeholder="Select an option"
+                          options={[
+                            { key: '1', text: 'Proceed to RFPP' },
+                            { key: '2', text: 'Proceed with Project Development' },
+                            { key: '3', text: 'Rejected' },
+                          ]} />
+                      </div>
+                    </div>
+                    <div className="profile-info-row" style={(this.PType == "RFPP" && !this.prmStatus) ? {} : { display: 'none' }}>
+                      <div className="profile-info-name">Status</div>
+                      <div className="profile-info-value">
+                        <Dropdown label=""
+                          id="RFPPStatus"
+                          onChange={this._getChanges.bind(this, "RFPPStatus")}
+                          placeholder="Select an option"
+                          options={[
+                            { key: '1', text: 'Proceed with Project Development' },
+                            { key: '2', text: 'Rejected' }
+                          ]} />
+                      </div>
+                    </div>
+                    <div className="profile-info-row" style={this.state.pjtAccepted ? {} : { display: 'none' }}>
+                      <div className="profile-info-name"></div>
+                      <div className="profile-info-value">
+                        <Checkbox label="Create a Project and its project space" onChange={this._onCheckboxChange} />
+                      </div>
+                    </div>
 
+                    <div className="profile-info-row" style={this.state.pjtAccepted ? {} : { display: 'none' }}>
+                      <div className="profile-info-name">Liaison Officer <span style={{ color: "red" }}>*</span></div>
+                      <div className="profile-info-value">
+                        <PeoplePicker context={this.props.context}
+                          personSelectionLimit={1}
+                          groupName={""}
+                          showtooltip={true}
+                          isRequired={true}
+                          ensureUser={true}
+                          selectedItems={this._getPeoplePickerItems.bind(this)}
+                          showHiddenInUI={false}
+                          principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
+                          resolveDelay={1500}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="profile-info-row" style={(this.state.items.Water) ? {} : { display: 'none' }}>
-                    <div className="profile-info-name">Water consumption</div>
-                    <div className="profile-info-value">
-                      <TextField id="Water" label="" suffix="m³/month" value={this.state.items.Water} disabled />
-                    </div>
-                  </div>
-                  <div className="profile-info-row" style={(this.state.items.Land) ? {} : { display: 'none' }}>
-                    <div className="profile-info-name">Land requirement </div>
-                    <div className="profile-info-value">
-                      <TextField id="Land" label="" suffix="hectares" value={this.state.items.Land} disabled />
-                    </div>
-                  </div>
-                  <div className="profile-info-row" style={(this.state.items.Port) ? {} : { display: 'none' }}>
-                    <div className="profile-info-name">Port requirements </div>
-                    <div className="profile-info-value">
-                      <TextField id="Port" label="" value={this.state.items.Port} disabled />
-                    </div>
-                  </div>
-                  <div className="profile-info-row" style={(this.state.items.WarehousingRequirements) ? {} : { display: 'none' }}>
-                    <div className="profile-info-name">Warehousing requirement </div>
-                    <div className="profile-info-value">
-                      <TextField id="WarehousingRequirements" label="" value={this.state.items.WarehousingRequirements} disabled />
-                    </div>
-                  </div>
-                  <div className="profile-info-row" style={(this.state.items.PotentialSaving) ? {} : { display: 'none' }}>
-                    <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
-                    <div className="profile-info-value">
-                      <TextField id="PotentialSaving" label="" value={this.state.items.PotentialSaving} disabled />
-                    </div>
-                  </div>
 
-                  <div className="profile-info-row" style={(this.state.items.Other) ? {} : { display: 'none' }}>
-                    <div className="profile-info-name">Other </div>
-                    <div className="profile-info-value">
-                      <TextField id="Other" label="" value={this.state.items.Other} disabled />
+                    <div className="profile-info-row" style={this.state.items.Comments ? {} : { display: 'none' }}>
+                      <div className="profile-info-name">Latest Comments</div>
+                      <div className="profile-info-value">
+                        <TextField label="" multiline rows={3} underlined onBlur={this.handleChange.bind(this)} disabled value={this.state.items.Comments} />
+                      </div>
                     </div>
+
+                    <div className="profile-info-row" >
+                      <div className="profile-info-name">Comments</div>
+                      <div className="profile-info-value">
+                        <TextField id="Comments" label="" multiline rows={3} underlined onBlur={this.handleChange.bind(this)} />
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="widget-body">
-            <div className="widget-main padding-8">
-              <div className="row">
-                <div className="profile-user-info profile-user-info-striped">
-
-                  <div className="profile-info-row" style={this.PType == "EOI" ? {} : { display: 'none' }}>
-                    <div className="profile-info-name">Status</div>
-                    <div className="profile-info-value">
-                      <Dropdown label=""
-                        id="EOIStatus"
-                        onChange={this._getChanges.bind(this, "EOIStatus")}
-                        placeholder="Select an option"
-                        options={[
-                          { key: '1', text: 'Proceed to RFPP' },
-                          { key: '2', text: 'Proceed with Project Development' },
-                          { key: '3', text: 'Rejected' },
-                        ]} />
-                    </div>
-                  </div>
-                  <div className="profile-info-row" style={this.PType == "RFPP" ? {} : { display: 'none' }}>
-                    <div className="profile-info-name">Status</div>
-                    <div className="profile-info-value">
-                      <Dropdown label=""
-                        id="EOIStatus"
-                        onChange={this._getChanges.bind(this, "EOIStatus")}
-                        placeholder="Select an option"
-                        options={[
-                          { key: '1', text: 'Proceed with Project Development' },
-                          { key: '2', text: 'Rejected' }
-                        ]} />
-                    </div>
-                  </div>
-                  <div className="profile-info-row" style={this.state.pjtAccepted ? {} : { display: 'none' }}>
-                    <div className="profile-info-name">Status</div>
-                    <div className="profile-info-value">
-                      <Checkbox label="Create a Project and its project space" onChange={this._onCheckboxChange} />
-                    </div>
-                  </div>
-
-                  <div className="profile-info-row" style={this.state.pjtAccepted ? {} : { display: 'none' }}>
-                    <div className="profile-info-name">Liaison Officer</div>
-                    <div className="profile-info-value">
-                      <PeoplePicker context={this.props.context}
-                        personSelectionLimit={1}
-                        groupName={""}
-                        showtooltip={true}
-                        isRequired={true}
-                        ensureUser={true}
-                        selectedItems={this._getPeoplePickerItems.bind(this)}
-                        showHiddenInUI={false}
-                        principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
-                        resolveDelay={1500}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="profile-info-row">
-                    <div className="profile-info-name">lates Comments</div>
-                    <div className="profile-info-value">
-                      <TextField label="" multiline rows={3} onBlur={this.handleChange.bind(this)} disabled value={this.state.items.Comments} />
-                    </div>
-                  </div>
-
-                  <div className="profile-info-row" >
-                    <div className="profile-info-name">Comments</div>
-                    <div className="profile-info-value">
-                      <TextField id="Comments" label="" multiline rows={3} onBlur={this.handleChange.bind(this)} />
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-          </div>
           {(this.state.listID && this.state.ItemId) ? (
             <div className={styles.row}>
               <ListItemAttachments listId={this.state.listID}
                 itemId={this.state.ItemId}
                 context={this.props.context}
-                disabled={false} />
+                disabled={this.state.disable} />
             </div>) : (
               <div></div>
             )
           }
 
-
-          <div className="pull-right mtp">
-
-            <PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
+          <div className={styles.pullright}>
+            <PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()} style={(this.state.isAdmin && !this.prmStatus) ? {} : { display: 'none' }}></PrimaryButton>
             &nbsp;&nbsp;<PrimaryButton title="Cancel" text="Cancel" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
           </div>
 
@@ -554,15 +602,14 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
             ></PrimaryButton>
           </div> */}
 
-
           <div>
             <Dialog
               hidden={this.state.hideDialog}
               onDismiss={this._closeDialog}
               dialogContentProps={{
                 type: DialogType.normal,
-                title: 'Porject Conformation',
-                subText: 'Do you want to make this project Accepted for Facilitation?'
+                title: 'Project Confirmation',
+                subText: 'Please confirm that you wish to change the status to Accepted for Facilitation?'
               }}
               modalProps={{
                 isBlocking: true,
@@ -575,6 +622,22 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
               </DialogFooter>
             </Dialog>
           </div>
+
+          <div>
+            <Panel
+              isOpen={this.state.spinner}
+              type={PanelType.custom}
+              headerText=""
+              closeButtonAriaLabel="Close"
+            >
+              <div>
+                <Spinner label="We are working, please wait..." ariaLive="assertive" labelPosition="right" />
+              </div>
+            </Panel>
+          </div>
+
+
+
 
 
         </div >

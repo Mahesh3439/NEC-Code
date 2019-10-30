@@ -1,11 +1,7 @@
 import { SPHttpClient, SPHttpClientResponse, ISPHttpClientOptions } from '@microsoft/sp-http';
 import { IListFormService } from './ICommonMethods';
-import { IProjectSpace } from '../../webparts/projectSummary/components/IProjectSummaryProps';
+
 import { WebPartContext } from '@microsoft/sp-webpart-base';
-import { IListItem } from '../../webparts/projectSummary/components/IProjectSummaryProps';
-import { sp,Web, WebAddResult } from "@pnp/sp";
-
-
 
 export class ListFormService implements IListFormService {
   private spHttpClient: SPHttpClient;
@@ -55,11 +51,11 @@ export class ListFormService implements IListFormService {
 
   public _getListItemEntityTypeName(context: WebPartContext, lsitTitle: string): Promise<string> {
     return new Promise<string>((resolve: (listItemEntityTypeName: string) => void, reject: (error: any) => void): void => {
-      // if (this.listItemEntityTypeName) {
-      //   resolve(this.listItemEntityTypeName);
-      //   return;
-      // }
-      const restApi = `${context.pageContext.site.absoluteUrl}/_api/web/lists/GetByTitle('${lsitTitle}')?$select=ListItemEntityTypeFullName`;
+      if (this.listItemEntityTypeName) {
+        resolve(this.listItemEntityTypeName);
+        return;
+      }
+      const restApi = `${context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('${lsitTitle}')?$select=ListItemEntityTypeFullName`;
       this.spHttpClient.get(restApi, SPHttpClient.configurations.v1)
         .then(response => {
           return response.json();
@@ -82,7 +78,7 @@ export class ListFormService implements IListFormService {
    * @returns Promise object represents the array of Item fields from a list.
    */
 
-  public _getListItem(context: WebPartContext, restApi: string) {
+  public _getListItem(context: WebPartContext, restApi:string) {
     //const restApi = `${context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('${listTitle}')/items(${ItemId})?$select=*,LiaisonOfficer/Id,LiaisonOfficer/EMail&$expand=LiaisonOfficer`;
     return context.spHttpClient.get(restApi, SPHttpClient.configurations.v1)
       .then(resp => { return resp.json(); });
@@ -90,7 +86,7 @@ export class ListFormService implements IListFormService {
   }
 
   public _getListItem_etag(context: WebPartContext, listTitle: string, ItemId: number) {
-    const restApi = `${context.pageContext.site.absoluteUrl}/_api/web/lists/GetByTitle('${listTitle}')/items(${ItemId})`;
+    const restApi = `${context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('${listTitle}')/items(${ItemId})`;
     return context.spHttpClient.get(restApi, SPHttpClient.configurations.v1)
       .then((response: SPHttpClientResponse) => {
         let etag = response.headers.get('ETag');
@@ -112,7 +108,7 @@ export class ListFormService implements IListFormService {
    * @webtemplate: {8CF9E84A-CD4E-4C2C-847E-2EB55655D939}#ProjectSpace
    */
 
-  public _creatProjectSpace(context: WebPartContext, siteTitle: string, siteURL: string,investor:string) {
+  public _creatProjectSpace(context: WebPartContext, siteTitle: string, siteURL: string) {
     let Api = `${context.pageContext.web.absoluteUrl}/_api/web/GetAvailableWebTemplates(lcid=1033)?$filter=Title eq 'ProjectSpace'`;
     return context.spHttpClient.get(Api, SPHttpClient.configurations.v1)
       .then(resp => { return resp.json(); })
@@ -136,35 +132,8 @@ export class ListFormService implements IListFormService {
         return context.spHttpClient.post(postURL, SPHttpClient.configurations.v1, spOpts)
           .then((response: SPHttpClientResponse) => {
             return response.json();
-          }).then(res =>
-            {
-              this._assigneUser(`https://ttengage.sharepoint.com${res.ServerRelativeUrl}`,"T.lessey-kelly@ttEngage.tt");
-              return res;
-            });            
+          });
       });
   }
 
-  public _assigneUser(siteURL:string,investor:string) {
-    let web = new Web(siteURL);
-    /**
-     * 26 - IF Admin Group
-     * 25 - Liaison Group
-     * 69 - Project Investor
-     * roleDefId -- 1073741829 -- FullControl
-     * roleDefId -- 1073741830 -- Edit
-     * roleDefId -- 1073741827 -- Contribute
-     */
-
-     //Assigning existing groups to Project Space
-    web.roleAssignments.add(26,1073741829);
-    web.roleAssignments.add(25,1073741829);
-    web.roleAssignments.add(69,1073741830);  
-
-    web.siteGroups.getByName("Project Investor").users.add(`i:0#.f|membership|${investor}`)
-      .then(function (d) {
-        d.select("Id").get().then(userData => {
-          console.log(userData);
-        });
-      });
-  }
 }

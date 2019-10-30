@@ -5,7 +5,7 @@ import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dia
 
 import styles from './ProjectSummary.module.scss';
 //import { IProjectSummaryProps, IProjectSummaryState, IListItem, IProjectSpace } from './IProjectSummaryProps';
-import { IProjectApprovalsProps, IProjectApprovalsState, IListItem } from './IProjectApprovalProps';
+import { IProjectApprovalsProps, IProjectApprovalsState, IListItem, } from './IProjectApprovalProps';
 import { escape } from '@microsoft/sp-lodash-subset';
 // import * as CustomJS from 'CustomJS';
 import { SPComponentLoader } from '@microsoft/sp-loader';
@@ -13,6 +13,9 @@ import { PeoplePicker, PrincipalType } from "@pnp/spfx-controls-react/lib/People
 import { SPHttpClient } from '@microsoft/sp-http';
 import * as moment from 'moment';
 import { sp, Web } from "@pnp/sp";
+
+
+import ProjectSpace from './ProjectSpace';
 
 
 import {
@@ -32,6 +35,8 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
     private listFormService: IListFormService;
     private fields = [];
     private items = [];
+    private selectedApprovals = [];
+    private delteItems = [];
     private Category = [];
     public ItemId: number;
     private ActionTakenKey: number;
@@ -39,6 +44,7 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
     public investor: number = null;
     public PjtState: string;
     public pjtSpace: string;
+    public Approvals: any[];
 
     constructor(props: IProjectApprovalsProps) {
         super(props);
@@ -47,33 +53,55 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
             items: [],
             hideDialog: true,
             Category: [],
-            Agency: null
+            Agency: null,
+            pjtItem: {},
+            showPanel: true
 
         };
 
+
         this.listFormService = new ListFormService(props.context.spHttpClient);
-        this.ItemId = Number(window.location.search.split("PID=")[1]);
-        const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Projects')/items(${this.ItemId})?$select=*,LiaisonOfficer/Id,LiaisonOfficer/EMail,Approvals/Title&$expand=LiaisonOfficer,Approvals`;
+        this.ItemId = Number(this.props.context.pageContext.web.absoluteUrl.split("/ProjectSpace")[1]);
+        const restApi = `${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/GetByTitle('Projects')/items(${this.ItemId})`;
         this.listFormService._getListItem(this.props.context, restApi)
             .then((response) => {
-                this.pjtSpace = response.ProjectURL;
-            });
+                //    this.props.context.statusRenderer.displayLoadingIndicator(document.getElementById("ApprovalsList"), "Approvals..."); 
 
-        const url: string = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Approvals Master')/items?$select=*,Agency/Title&$expand=Agency`;
-        this.listFormService._getListitems(this.props.context, url)
-            .then((resp) => {
-                let data = resp.value;
-                this.Category = [...new Set(data.map(x => x.Category))];
                 this.setState({
-                    items: data
+                    pjtItem: response
                 });
+            }).then(() => {
 
+                const url: string = `${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/getbytitle('Approvals Master')/items?$select=*,Agency/Title&$expand=Agency`;
+                this.listFormService._getListitems(this.props.context, url)
+                    .then((resp) => {
+                        let data = resp.value;
+                        if (window.navigator.userAgent.indexOf("Trident/") > 0) {
+                            let cat: any[] = [...new Set(data.map(x => x.Category))];
+                            this.Category = cat[0]._values;
+                        }
+                        else {
+                            this.Category = [...new Set(data.map(x => x.Category))];
+                        }
+
+
+                        this.setState({
+                            items: data
+                        });
+
+                        if (this.state.pjtItem.ApprovalsId.length > 0) {
+                            this.items = this.state.pjtItem.ApprovalsId;
+                            this.selectedApprovals = this.state.pjtItem.ApprovalsId;
+                        }
+
+                        //   this.props.context.statusRenderer.clearLoadingIndicator(document.getElementById("ApprovalsList"));
+
+                    });
             });
 
         this._onCheckboxChange = this._onCheckboxChange.bind(this);
 
     }
-
 
     /**
        * Gets the schema for all relevant fields for a specified SharePoint list form.     
@@ -90,51 +118,67 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
     private _onCheckboxChange(event, isChecked: boolean): void {
 
         if (isChecked) {
-            this.fields.push(event.currentTarget.name);
-            this.items.push(event.currentTarget.id)
+            let value = event.currentTarget.id;
+            if (this.selectedApprovals.indexOf(Number(value)) == -1) {
+                this.fields.push(event.currentTarget.name);
+            }
+            this.items.push(event.currentTarget.id);
         }
         else {
-            let value = event.currentTarget.name
-            this.fields = this.fields.filter(function (ele) {
-                return ele != value;
-            });
 
-            let itemID = event.currentTarget.id
-            this.items = this.items.filter(function (ele) {
-                return ele != itemID;
-            });
+            let value = event.currentTarget.name;
+            if (this.fields.indexOf(value) > 0) {
+                this.fields = this.fields.filter(function (ele) {
+                    return ele != value;
+                });
+            }
+
+            let itemID = event.currentTarget.id;
+            if ((this.items.indexOf(Number(itemID)) > -1) || (this.items.indexOf(itemID) > -1)) {
+                this.items = this.items.filter(function (ele) {
+                    return ele != itemID;
+                });
+
+                this.delteItems.push(event.currentTarget.id);
+            }
             console.log(`The option has been changed to ${isChecked}.`);
         }
     }
 
     public _submitData() {
-        let web = new Web(`${this.pjtSpace}`);
+        let web = new Web(`${this.props.context.pageContext.web.absoluteUrl}`);
+        sp.site.getContextInfo().then(d => {
+            console.log(d.FormDigestValue);
+        });
         let list = web.lists.getByTitle("Approvals");
         list.getListItemEntityTypeFullName().then(entityTypeFullName => {
             let batch = web.createBatch();
-
             for (const index of this.fields) {
                 let item = this.state.items[index];
                 list.items.inBatch(batch).add(
                     {
-                        Title: `${item.Title}`,
-                        ApprovalCategory:`${item.Category}`,
-                        ApprovalOrder:`${item.ApprovalOrder}`,
-                        AgencyResponsible:`${item.Agency.Title}`,
-                        AgencyGroupId:`${item.AgencyGroupId}`
-                        
-                        //ProjectName
-                        //Investor
-                        //ApprovalID
-
+                        Title: item.Title,
+                        ApprovalCategory: `${item.Category}`,
+                        AgencyResponsible: `${item.Agency.Title}`,
+                        ProjectName: this.state.pjtItem.Title,
+                        InvestorId: this.state.pjtItem.InvestorId,
+                        LiasonOfficerId: this.state.pjtItem.LiaisonOfficerId,
+                        ApprovalOrder: `${item.ApprovalOrder}`,
+                        ApprovalShortName: `${item.ApprovalShortName}`,
+                        ApprovalID: item.Id.toString()
                     },
                     entityTypeFullName).then(b => {
                         console.log(b);
                     });
             }
-            batch.execute().then(d =>
-                console.log("Done")
-            );
+            batch.execute()
+                .then(
+                    d => {
+                        console.log("Done");
+                        alert("Approval list has successfuly saved.");
+                        this.props.onDissmissPanel();
+                        // this.setState({ showPanel: false });                        
+                    });
         });
     }
 
@@ -169,32 +213,59 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
     }
     //function to submit the Project summary and for updates
     private async SaveData() {
-        return this.listFormService._getListItemEntityTypeName(this.props.context, "Projects")
-            .then(listItemEntityTypeName => {
-                let vbody: string = this._getContentBody(listItemEntityTypeName);
-                return this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Projects')/items`, SPHttpClient.configurations.v1, {
-                    headers: {
-                        'Accept': 'application/json;odata=nometadata',
-                        'Content-type': 'application/json;odata=verbose',
-                        'odata-version': ''
-                    },
-                    body: vbody
-                });
-            }).then(response => {
-                return response.json();
+
+        if (this.delteItems.length > 0) {
+            for (let ditem of this.delteItems) {
+                let itemID = ditem;
+                if ((this.items.indexOf(Number(itemID)) > -1) || (this.items.indexOf(itemID) > -1)) {
+                    this.delteItems = this.delteItems.filter(function (ele) {
+                        return ele != itemID;
+                    });                  
+                }
+            }
+
+        }
+
+
+        let web = new Web(`${this.props.context.pageContext.site.absoluteUrl}`);
+        let list = web.lists.getByTitle("Projects");
+        list.items.getById(this.ItemId).update({
+            ApprovalsId: {
+                results: this.items
+            }
+        }).then(i => {
+            console.log(i);
+            this._submitData();
+            if(this.delteItems.length > 0)
+            {
+                this._deleteItems();
+            }
+        });
+    }
+
+    private _deleteItems() {
+        for(let dItem of this.delteItems)
+        {
+            sp.web.lists.getByTitle("Approvals").items.top(1).filter(`ApprovalID eq '${dItem}'`).get().then((items: any[]) => {
+                if (items.length > 0) {
+                    sp.web.lists.getByTitle("Approvals").items.getById(items[0].Id).delete().then(_ => {});
+                }
             });
+        }     
+
     }
 
     private _submitform() {
         this.SaveData()
             .then((resp) => {
-            })
+            });
     }
 
 
     public render(): React.ReactElement<IProjectApprovalsProps> {
+        var itemIndex: number = -1;
         return (
-            <div className={styles.projectSummary}>
+            <div id="ApprovalsList" className={styles.projectSummary} >
                 <div className={styles.header}>
                     <h4 className={styles.title}>PROJECT SUMMARY APPROVALS</h4>
                 </div>
@@ -202,37 +273,49 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
                     {this.Category.map((value, index) => {
                         return (
                             <div>
-                                <div style={{ background: "#fbaf33", color: "#fff", margin: "0 auto", padding: "0px 8px", lineHeight:"25px" }}>
+                                <div style={{ background: "#fbaf33", color: "#fff", margin: "0 auto", padding: "0px 8px", lineHeight: "25px" }}>
                                     <h4>{value}</h4>
                                 </div>
                                 {this.state.items.filter(item => item.Category == `${value}`).map((AppValue, index) => {
+                                    ++itemIndex;
+                                    var isChecked: boolean = null;
+                                    if (this.state.pjtItem.ApprovalsId.indexOf(AppValue.Id) > -1)
+                                        isChecked = true;
+
                                     return (
                                         <div className={styles.row}>
                                             <div className="ApprovalCheckList">
-                                                <Checkbox name={index.toString()} id={AppValue.Id.toString()} label={AppValue.Title} onChange={this._onCheckboxChange} />
+                                                {
+                                                    this.state.pjtItem.ApprovalsId.indexOf(AppValue.Id) > -1 ?
+                                                        <Checkbox name={itemIndex.toString()} defaultChecked id={AppValue.Id.toString()} label={AppValue.Title} onChange={this._onCheckboxChange} /> :
+                                                        <Checkbox name={itemIndex.toString()} id={AppValue.Id.toString()} label={AppValue.Title} onChange={this._onCheckboxChange} />
+
+                                                }
+
                                             </div>
                                             <div className="AgencyName">
                                                 <label>{AppValue.AgencyId ? AppValue.Agency.Title : ""}</label>
                                             </div>
                                         </div>
-                                    )
+                                    );
                                 })}
 
                             </div>
-                        )
+                        );
                     })}
 
                 </div>
 
                 <PrimaryButton
-                    text="Submit"
-                    onClick={() => this._submitData()}
+                    text="Save"
+                    onClick={() => this.SaveData()}
                 ></PrimaryButton>
 
-                <DefaultButton
-                    text="Cancel"></DefaultButton>               
-                  
+                {/* <DefaultButton
+                    text="Cancel"></DefaultButton>                */}
+
             </div>
-        )
+        );
     }
 }
+
