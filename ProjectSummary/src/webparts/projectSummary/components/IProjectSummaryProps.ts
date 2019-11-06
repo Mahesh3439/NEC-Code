@@ -28,6 +28,8 @@ export interface IProjectSummaryState {
   liaisonEmail:string;
   stageStartDate:Date;
   isLiaison:boolean;
+  
+  
 }
 
 export interface IListItem {
@@ -62,6 +64,7 @@ export interface IListItem {
   ProjectURL?:string;
   StageStartDate?:string;
   ReqAction?:string;
+  InvestorId?:number;
 }
 
 
@@ -72,3 +75,4 @@ export interface IProjectSpace {
   siteDesp?: string;
   investor?: number;
 }
+

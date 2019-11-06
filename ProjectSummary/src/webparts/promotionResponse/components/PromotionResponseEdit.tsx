@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styles from './PromotionResponse.module.scss';
-import { IPromotionResponseProps, IPromotionResponseState, IListItem } from './IPromotionResponseProps';
+import { IPromotionResponseProps, IPromotionResponseState, IErrorLog } from './IPromotionResponseProps';
 import { escape } from '@microsoft/sp-lodash-subset';
 import { Label, TextField, PrimaryButton, DefaultButton, DatePicker, Checkbox, Spinner } from 'office-ui-fabric-react/lib';
 import { SPComponentLoader } from '@microsoft/sp-loader';
@@ -20,7 +20,8 @@ import { SPHttpClient } from '@microsoft/sp-http';
 import { string } from 'prop-types';
 import { PeoplePicker, PrincipalType } from "@pnp/spfx-controls-react/lib/PeoplePicker";
 import { ListItemAttachments } from '@pnp/spfx-controls-react/lib/ListItemAttachments';
-import '../../../Commonfiles/Services/customStyles.css';
+//import '../../../Commonfiles/Services/customStyles.css';
+import '../../../Commonfiles/Services/Custom.css';
 
 export default class PromotionResponseEdit extends React.Component<IPromotionResponseProps, IPromotionResponseState, {}> {
 
@@ -30,7 +31,9 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
   public PType: string;
   public liaisonofficer: number = null;
   public responseTitle: string;
-  public prmStatus:string;
+  public prmStatus: string;
+  public investorEmail: string;
+  public errorLog: IErrorLog = {};
 
 
   constructor(props: IPromotionResponseProps) {
@@ -71,7 +74,6 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
     this.PItemId = Number(window.location.search.split("ItemId=")[1].split("&PType")[0]);
     this.PType = window.location.search.split("PType=")[1];
 
-
     if (this.PItemId) {
 
       if (this.PType == "EOI")
@@ -79,26 +81,26 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
       else if (this.PType == "RFPP")
         this.responseTitle = "RFPP Responses";
 
-      const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('${this.responseTitle}')/items(${this.PItemId})?$select=*,Author/EMail&$expand=Author`;
+      const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('${this.responseTitle}')/items(${this.PItemId})?$select=*,Author/EMail,PromotionID/DeadlineDate&$expand=Author,PromotionID`;
       this.listFormService._getListItem(this.props.context, restApi)
         .then((response) => {
           var vdisable = true;
-          if ((this.props.context.pageContext.user.email == response.Author.EMail) && (new Date() <= new Date(response.DeadlineDate))) {
+          this.investorEmail = response.Author.EMail;
+          if ((this.props.context.pageContext.user.email == response.Author.EMail) && (new Date() <= new Date(response.PromotionID.DeadlineDate))) {
             vdisable = false;
           }
 
-          
-          if (this.PType == "EOI")
-            this.prmStatus = response.EOIStatus;
-          else if (this.PType == "RFPP")
-            this.prmStatus = response.RFPPStatus;
 
+          if (this.PType == "EOI")
+            this.prmStatus = response.EOIStatus == "Submitted" ? null : response.EOIStatus;
+          else if (this.PType == "RFPP")
+            this.prmStatus = response.RFPPStatus == "Submitted" ? null : response.RFPPStatus;
 
           this.setState({
             items: response,
             ItemId: this.PItemId,
             disable: vdisable
-           
+
           });
         });
 
@@ -181,7 +183,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
   private _onCheckboxChange(ev: React.FormEvent<HTMLElement>, isChecked: boolean): void {
     this.setState(
       {
-        crtPjtSpace: true
+        crtPjtSpace: isChecked
       });
 
     this.fields.push("withPjtSpace");
@@ -190,6 +192,13 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
 
   private _closeDialog = (): void => {
     this.setState({ hideDialog: true });
+  }
+  private _AcceptDialog = (): void => {
+    this.setState({
+      crtPjtSpace: true,
+      hideDialog: true
+    });
+    this.fields.push("withPjtSpace");
   }
 
 
@@ -251,6 +260,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
     bodyContent["PromotionType"] = this.PType;
     bodyContent["ProjectStatus"] = "Accepted for Facilitation";
     bodyContent["InvestorId"] = this.state.items.AuthorId;
+    bodyContent["sendEmail"] = true;
 
     // bodyContent["Title"] = this.state.items.Title;
     // bodyContent["PromotionType"] = this.state.items.PromotionType;
@@ -260,12 +270,11 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
 
   private _submitform() {
 
-    if(this.state.status == "Proceed with Project Development" && !this.liaisonofficer)
-    {
+    if (this.state.status == "Proceed with Project Development" && !this.liaisonofficer) {
       alert("Liaison Officer is required");
       return false;
     }
-    
+
 
     this.setState({
       spinner: true
@@ -277,7 +286,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
           let itemID = resp.Id;
           let vsiteurl = `ProjectSpace${itemID}`;
           let vsiteTitle = resp.Title;
-          this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl,"")
+          this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl, Number(this.state.items.AuthorId))
             .then((responseJSON) => {
               this.setState({
                 pjtSpace: responseJSON.ServerRelativeUrl
@@ -319,30 +328,52 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
 
   }
 
-  public _createProject() {
-    var listTitle = "Projects";
+  public async _createProject() {
+    try {
+      var listTitle = "Projects";
 
-    return this.listFormService._getListItemEntityTypeName(this.props.context, listTitle)
-      .then(listItemEntityTypeName => {
-        let vbody: string = this._getBodyforPDA(listItemEntityTypeName);
-        return this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listTitle}')/items`, SPHttpClient.configurations.v1, {
-          headers: {
-            'Accept': 'application/json;odata=nometadata',
-            'Content-type': 'application/json;odata=verbose',
-            'odata-version': ''
-          },
-          body: vbody
+      return await this.listFormService._getListItemEntityTypeName(this.props.context, listTitle)
+        .then(listItemEntityTypeName => {
+          let vbody: string = this._getBodyforPDA(listItemEntityTypeName);
+          return this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listTitle}')/items`, SPHttpClient.configurations.v1, {
+            headers: {
+              'Accept': 'application/json;odata=nometadata',
+              'Content-type': 'application/json;odata=verbose',
+              'odata-version': ''
+            },
+            body: vbody
+          });
+        }).then(async response => {
+          if (!response.ok) {
+            const respText = await response.text();
+            throw new Error(respText.toString());
+
+          }
+          else {
+            return response.json();
+          }
         });
-      }).then(response => {
-        return response.json();
+    } catch (error) {
+      this.errorLog = {
+        component: "Project Creation",
+        page: window.location.href,
+        Module: "Data Save",
+        exception: error
+      }
+
+      await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
+      this.setState({
+        spinner: false
       });
+
+    }
   }
 
-  public updateResponse() {
+  public async updateResponse() {
     this.listFormService._getListItemEntityTypeName(this.props.context, this.responseTitle)
-      .then(listItemEntityTypeName => {
+      .then(async listItemEntityTypeName => {
         let vbody: string = this._getContentBody(listItemEntityTypeName);
-        return this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${this.responseTitle}')/items(${this.PItemId})`, SPHttpClient.configurations.v1, {
+        return await this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${this.responseTitle}')/items(${this.PItemId})`, SPHttpClient.configurations.v1, {
           headers: {
             'Accept': 'application/json;odata=nometadata',
             'Content-type': 'application/json;odata=verbose',
@@ -359,6 +390,18 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
         });
         alert("Status updated successfully.");
         window.history.back();
+      }, async (error: any): Promise<void> => {
+        this.errorLog = {
+          component: "Promotion intrest Update",
+          page: window.location.href,
+          Module: "Data updating",
+          exception: error
+        }
+
+        await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
+        this.setState({
+          spinner: false
+        });
       });
 
 
@@ -382,26 +425,26 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
                     <div className="profile-info-row">
                       <div className="profile-info-name">Promotion Title</div>
                       <div className="profile-info-value">
-                        <TextField id="Title" underlined placeholder="Project Title" value={this.state.items.Title} disabled={this.state.disable} />
+                        <TextField id="Title" underlined placeholder="Project Title" defaultValue={this.state.items.Title} readOnly />
                       </div>
                     </div>
                     <div className="profile-info-row">
                       <div className="profile-info-name">Project Title</div>
                       <div className="profile-info-value">
-                        <TextField id="PjtTitle" underlined value={this.state.items.PjtTitle} disabled={this.state.disable} />
+                        <TextField id="PjtTitle" underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.PjtTitle} readOnly={this.state.disable} />
                       </div>
                     </div>
                     <div className="profile-info-row">
                       <div className="profile-info-name">Short Description </div>
                       <div className="profile-info-value">
-                        <TextField id="ProjectDescription" underlined multiline rows={3} value={this.state.items.ProjectDescription} disabled={this.state.disable} />
+                        <TextField id="ProjectDescription" underlined onBlur={this.handleChange.bind(this)} multiline rows={3} defaultValue={this.state.items.ProjectDescription} readOnly={this.state.disable} />
                       </div>
                     </div>
 
                     <div className="profile-info-row">
                       <div className="profile-info-name">List of investors / Partners</div>
                       <div className="profile-info-value">
-                        <TextField id="Listofinvestors" underlined placeholder="List of Investors/Partners" value={this.state.items.Listofinvestors} disabled={this.state.disable} />
+                        <TextField id="Listofinvestors" underlined onBlur={this.handleChange.bind(this)} placeholder="List of Investors/Partners" defaultValue={this.state.items.Listofinvestors} readOnly={this.state.disable} />
                       </div>
                     </div>
                     <div className="profile-info-row">
@@ -439,56 +482,59 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
                           rows={3}
                           underlined
                           placeholder="Products & Associated Quantity"
-                          value={this.state.items.Productsandassociatedquantities}
-                          disabled={this.state.disable} />
+                          defaultValue={this.state.items.Productsandassociatedquantities}
+                          readOnly={this.state.disable}
+                          onBlur={this.handleChange.bind(this)} />
                       </div>
 
                       <div className="profile-info-name">Capital Expenditure </div>
                       <div className="profile-info-value">
-                        <TextField id="CapitalExpenditure" className="wd100" label="" underlined placeholder="Capital Expenditure" value={this.state.items.CapitalExpenditure} disabled={this.state.disable} suffix="US$MM" />
+                        <TextField id="CapitalExpenditure" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} placeholder="Capital Expenditure" defaultValue={this.state.items.CapitalExpenditure} readOnly={this.state.disable} suffix="US$MM" />
                       </div>
                     </div>
 
-                    <div className="profile-info-row">
-                      <div className="profile-info-name">Natural Gas Requirements</div>
-                      <div className="profile-info-value">
-                        <TextField id="Naturalgas" suffix="mmscf/d" className="wd100" underlined value={this.state.items.Naturalgas} disabled={this.state.disable} />
-                      </div>
-                      <div className="profile-info-name">Electricity </div>
-                      <div className="profile-info-value">
-                        <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field wd100" suffix="MW" underlined value={this.state.items.ElectricityMW} disabled={this.state.disable} />
-                        <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field wd100" suffix="kVA" underlined value={this.state.items.ElectricityKW} disabled={this.state.disable} />
-
-                      </div>
-                    </div>
-                    <div className="profile-info-row">
-                      <div className="profile-info-name">Water Consumption</div>
-                      <div className="profile-info-value">
-                        <TextField id="Water" className="wd100" label="" suffix="m³/month" underlined value={this.state.items.Water} disabled={this.state.disable} />
-                      </div>
-                      <div className="profile-info-name">Land Requirement </div>
-                      <div className="profile-info-value">
-                        <TextField id="Land" className="wd100" label="" suffix="hectares" underlined value={this.state.items.Land} disabled={this.state.disable} />
-                      </div>
-                    </div>
                     <div className="profile-info-row">
                       <div className="profile-info-name">Port Requirements </div>
                       <div className="profile-info-value">
-                        <TextField id="Port" className="wd100" label="" multiline rows={3} underlined value={this.state.items.Port} disabled={this.state.disable} />
+                        <TextField id="Port" className="wd100" label="" multiline rows={3} underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.Port} readOnly={this.state.disable} />
                       </div>
+                      <div className="profile-info-name">Natural Gas Requirements</div>
+                      <div className="profile-info-value">
+                        <TextField id="Naturalgas" suffix="mmscf/d" className="wd100" underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.Naturalgas} readOnly={this.state.disable} />
+                      </div>
+
+                    </div>
+                    <div className="profile-info-row">
                       <div className="profile-info-name">Warehousing Requirement </div>
                       <div className="profile-info-value">
-                        <TextField id="WarehousingRequirements" multiline rows={3} className="wd100" label="" underlined value={this.state.items.WarehousingRequirements} disabled={this.state.disable} />
+                        <TextField id="WarehousingRequirements" multiline rows={3} className="wd100" onBlur={this.handleChange.bind(this)} label="" underlined defaultValue={this.state.items.WarehousingRequirements} readOnly={this.state.disable} />
+                      </div>
+                      <div className="profile-info-name">Electricity </div>
+                      <div className="profile-info-value">
+                        <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field wd100" onBlur={this.handleChange.bind(this)} suffix="MW" underlined defaultValue={this.state.items.ElectricityMW} readOnly={this.state.disable} />
+                        <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field wd100" onBlur={this.handleChange.bind(this)} suffix="kVA" underlined defaultValue={this.state.items.ElectricityKW} readOnly={this.state.disable} />
+
                       </div>
                     </div>
                     <div className="profile-info-row">
                       <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
                       <div className="profile-info-value">
-                        <TextField id="PotentialSaving" className="wd100" label="" underlined value={this.state.items.PotentialSaving} disabled={this.state.disable} />
+                        <TextField id="PotentialSaving" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.PotentialSaving} readOnly={this.state.disable} />
                       </div>
+                      <div className="profile-info-name">Water Consumption</div>
+                      <div className="profile-info-value">
+                        <TextField id="Water" className="wd100" label="" suffix="m³/month" underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.Water} readOnly={this.state.disable} />
+                      </div>
+
+                    </div>
+                    <div className="profile-info-row">
                       <div className="profile-info-name">Other </div>
                       <div className="profile-info-value">
-                        <TextField id="Other" className="wd100" label="" multiline rows={3} underlined value={this.state.items.Other} disabled={this.state.disable} />
+                        <TextField id="Other" className="wd100" label="" multiline rows={3} underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.Other} readOnly={this.state.disable} />
+                      </div>
+                      <div className="profile-info-name">Land Requirement </div>
+                      <div className="profile-info-value">
+                        <TextField id="Land" className="wd100" label="" suffix="hectares" underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.Land} readOnly={this.state.disable} />
                       </div>
                     </div>
                   </div>
@@ -505,7 +551,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
                     <div className="profile-info-row" style={this.prmStatus ? {} : { display: 'none' }}>
                       <div className="profile-info-name">Status</div>
                       <div className="profile-info-value">
-                      <TextField label="" underlined disabled value={this.prmStatus} />
+                        <TextField label="" underlined readOnly value={this.prmStatus} />
                       </div>
                     </div>
                     <div className="profile-info-row" style={(this.PType == "EOI" && !this.prmStatus) ? {} : { display: 'none' }}>
@@ -518,7 +564,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
                           options={[
                             { key: '1', text: 'Proceed to RFPP' },
                             { key: '2', text: 'Proceed with Project Development' },
-                            { key: '3', text: 'Rejected' },
+                            { key: '3', text: 'Not Successful' },
                           ]} />
                       </div>
                     </div>
@@ -531,14 +577,14 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
                           placeholder="Select an option"
                           options={[
                             { key: '1', text: 'Proceed with Project Development' },
-                            { key: '2', text: 'Rejected' }
+                            { key: '2', text: 'Not Successful' }
                           ]} />
                       </div>
                     </div>
                     <div className="profile-info-row" style={this.state.pjtAccepted ? {} : { display: 'none' }}>
                       <div className="profile-info-name"></div>
                       <div className="profile-info-value">
-                        <Checkbox label="Create a Project and its project space" onChange={this._onCheckboxChange} />
+                        <Checkbox label="Create a Project and its project space" defaultChecked={this.state.crtPjtSpace} onChange={this._onCheckboxChange} />
                       </div>
                     </div>
 
@@ -591,8 +637,8 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
           }
 
           <div className={styles.pullright}>
-            <PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()} style={(this.state.isAdmin && !this.prmStatus) ? {} : { display: 'none' }}></PrimaryButton>
-            &nbsp;&nbsp;<PrimaryButton title="Cancel" text="Cancel" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
+            <PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()} style={((this.state.isAdmin && !this.prmStatus) || (!this.state.disable)) ? {} : { display: 'none' }}></PrimaryButton>
+            &nbsp;&nbsp;<PrimaryButton title="Close" text="Close" allowDisabledFocus onClick={() => { window.history.back(); }}></PrimaryButton>
           </div>
 
           {/* <div className={styles.row}>
@@ -617,7 +663,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
               }}
             >
               <DialogFooter>
-                <PrimaryButton onClick={this._closeDialog} text="Yes" />
+                <PrimaryButton onClick={this._AcceptDialog} text="Yes" />
                 <DefaultButton onClick={this._closeDialog} text="Cancel" />
               </DialogFooter>
             </Dialog>

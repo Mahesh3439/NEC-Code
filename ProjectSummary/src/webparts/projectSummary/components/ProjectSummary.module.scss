@@ -100,6 +100,7 @@
 
   .pullright {
     float: right;
+    margin: 10px;
   }
 
   
@@ -114,21 +115,10 @@
     font-weight: bold;
     background-color: orange;
   }
-  @media only screen and (min-width: 769px) {
-  .Electricity
-  {
-    width: 36% !important;
-    display: table-cell !important;    
-  }
-}
+  
 }
 
-@media only screen and (min-width: 769px) { 
-  [class^="Electricity"]
-  {
-    width: 36% !important;
-    display: table-cell !important;    
-  }
+@media only screen and (min-width: 769px) {  
 
   [class^="ApprovalCheckList"]
   {
@@ -138,11 +128,7 @@
   
 }
 
-@media only screen and (max-width: 769px) {
-  .ms-TextField.Electricity{    
-    margin: 10 0px !important;
-    height: 27px !important;
-  }
+@media only screen and (max-width: 769px) { 
 
   [class^="ApprovalCheckList"]
   {

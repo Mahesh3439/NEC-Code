@@ -60,3 +60,10 @@ export interface IListItem {
   PjtTitle?:string;
   DeadlineDate?:Date;
 }
+
+export interface IErrorLog{
+  component?:string;
+  Module?:string;
+  page?:string;
+  exception?:string;
+}

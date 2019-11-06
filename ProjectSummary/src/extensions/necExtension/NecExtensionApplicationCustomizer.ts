@@ -9,12 +9,14 @@ import { Dialog } from '@microsoft/sp-dialog';
 
 import * as strings from 'NecExtensionApplicationCustomizerStrings';
 
-import '../../Commonfiles/Services/customStyles.css';
+//import '../../Commonfiles/Services/customStyles.css';
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
-import pnp, { PermissionKind, sp } from "sp-pnp-js";
+import pnp, { PermissionKind } from "sp-pnp-js";
+import { sp } from "@pnp/sp";
 
 import { SPPermission } from '@microsoft/sp-page-context';
+import { SPComponentLoader } from '@microsoft/sp-loader';
 
 require('sp-init');
 require('microsoft-ajax');
@@ -43,6 +45,24 @@ export default class NecExtensionApplicationCustomizer
 
   @override
   public onInit(): Promise<void> {
+    // sp.setup({
+    //   spfxContext: this.context
+    // });
+
+
+    SPComponentLoader.loadCss(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/GlobalCSS.css`);
+    
+    SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
+      globalExportsName: 'jQuery'
+  }).catch((error) => {
+
+  }).then((): Promise<{}> => {
+      return SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.MultiFile.js`, {
+          globalExportsName: 'jQuery'
+      });
+  }).catch((error) => {
+
+  });
     Log.info(LOG_SOURCE, `Initialized ${strings.Title}`);
 
     const cssUrl: string = `${this.context.pageContext.site.absoluteUrl}/SiteAssets/CustomCSS.css`;
@@ -123,6 +143,8 @@ export default class NecExtensionApplicationCustomizer
          </div>
           `;
           // this.LoadSiteBreadcrumb(this);
+
+          //this._UpdateProfile();
          
         }
       }
@@ -187,6 +209,30 @@ export default class NecExtensionApplicationCustomizer
 
     //       suiteBar.setAttribute("style", "display: block !important");
     //     });
+  }
+
+  private _UpdateProfile():void{
+
+    //WorkEmail
+
+    //let loginName = `${this.context.pageContext.user.loginName}`;
+    let loginName = "i:0#.f|membership|s.agency@ttengage.tt";
+
+      // sp.profiles.myProperties.get().then(function(result) {
+      //   var props = result.UserProfileProperties;
+      //   var propValue = "";
+      //   props.forEach(function(prop) {
+      //   propValue += prop.Key + " - " + prop.Value + "<br/>";
+      //   });
+      //   console.log(propValue);
+      //   }).catch(function(err) {
+      //   console.log("Error: " + err);
+      //   });
+
+      sp.profiles.getUserProfilePropertyFor(loginName,"WorkEmail")
+      .then((prop:string)=>{
+        console.log(prop);
+      })
   }
 
 }

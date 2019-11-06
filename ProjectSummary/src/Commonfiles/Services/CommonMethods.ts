@@ -3,7 +3,8 @@ import { IListFormService } from './ICommonMethods';
 import { IProjectSpace } from '../../webparts/projectSummary/components/IProjectSummaryProps';
 import { WebPartContext } from '@microsoft/sp-webpart-base';
 import { IListItem } from '../../webparts/projectSummary/components/IProjectSummaryProps';
-import { sp,Web, WebAddResult } from "@pnp/sp";
+import { IErrorLog } from '../../webparts/projectSummary/components/IProjectSummarySubmitProps';
+import { sp, Web, WebAddResult } from "@pnp/sp";
 
 
 
@@ -89,7 +90,7 @@ export class ListFormService implements IListFormService {
 
   }
 
-  public _getListItem_etag(context: WebPartContext, listTitle: string, ItemId: number) {
+  public async _getListItem_etag(context: WebPartContext, listTitle: string, ItemId: number) {
     const restApi = `${context.pageContext.site.absoluteUrl}/_api/web/lists/GetByTitle('${listTitle}')/items(${ItemId})`;
     return context.spHttpClient.get(restApi, SPHttpClient.configurations.v1)
       .then((response: SPHttpClientResponse) => {
@@ -112,11 +113,11 @@ export class ListFormService implements IListFormService {
    * @webtemplate: {8CF9E84A-CD4E-4C2C-847E-2EB55655D939}#ProjectSpace
    */
 
-  public _creatProjectSpace(context: WebPartContext, siteTitle: string, siteURL: string,investor:string) {
+  public async _creatProjectSpace(context: WebPartContext, siteTitle: string, siteURL: string, investor: number) {
     let Api = `${context.pageContext.web.absoluteUrl}/_api/web/GetAvailableWebTemplates(lcid=1033)?$filter=Title eq 'ProjectSpace'`;
     return context.spHttpClient.get(Api, SPHttpClient.configurations.v1)
       .then(resp => { return resp.json(); })
-      .then((response) => {
+      .then(async (response) => {
         let items = response.value[0];
         let templateName = items.Name;
         const postURL: string = `${context.pageContext.web.absoluteUrl}/_api/web/webinfos/add`;
@@ -133,38 +134,82 @@ export class ListFormService implements IListFormService {
               }
           }`
         };
-        return context.spHttpClient.post(postURL, SPHttpClient.configurations.v1, spOpts)
+        return await context.spHttpClient.post(postURL, SPHttpClient.configurations.v1, spOpts)
           .then((response: SPHttpClientResponse) => {
             return response.json();
-          }).then(res =>
-            {
-              this._assigneUser(`https://ttengage.sharepoint.com${res.ServerRelativeUrl}`,"T.lessey-kelly@ttEngage.tt");
-              return res;
-            });            
+          }).then(async res => {
+            await this._assigneUser(res.ServerRelativeUrl, investor);
+            return res;
+          });
       });
   }
 
-  public _assigneUser(siteURL:string,investor:string) {
-    let web = new Web(siteURL);
+
+  /**
+       * 26 - IF Admin Group
+       * 25 - Liaison Group
+       * 24 - Approval Agencies
+       * 69 - Project Investor
+       * roleDefId -- 1073741829 -- FullControl
+       * roleDefId -- 1073741830 -- Edit
+       * roleDefId -- 1073741827 -- Contribute
+       */
+  public async _assigneUser(siteURL: string, investor: number) {
+    let webURL = `https://ttengage.sharepoint.com${siteURL}`;
+
+    let web = new Web(webURL);
+
+    //Assigning existing groups to Project Space
+    web.roleAssignments.add(26, 1073741829);
+    web.roleAssignments.add(25, 1073741829);
+    //Assigning access to the Investor with contribute rights.
+    //UserId and roleDefId
+    web.roleAssignments.add(investor, 1073741827);
+
+
+    let Approvals = web.lists.getByTitle("Approvals");
+    let issues = web.lists.getByTitle("Issues");
+
+
+    let sitePage: string[] = [`${siteURL}/SitePages/ViewIssue.aspx`, `${siteURL}/SitePages/EditApprovalInfo.aspx`, `${siteURL}/SitePages/Roadmap.aspx`];
+    for (let pageURL of sitePage) {
+
+      let getPage = web.getFileByServerRelativeUrl(pageURL);
+      let page = await getPage.getItem();
+      await page.breakRoleInheritance(false);
+      await page.roleAssignments.add(24, 1073741827);
+      await page.roleAssignments.add(25, 1073741829);
+      await page.roleAssignments.add(26, 1073741829);
+      await page.roleAssignments.add(investor, 1073741827);
+
+    }
+
     /**
-     * 26 - IF Admin Group
-     * 25 - Liaison Group
-     * 69 - Project Investor
-     * roleDefId -- 1073741829 -- FullControl
-     * roleDefId -- 1073741830 -- Edit
-     * roleDefId -- 1073741827 -- Contribute
-     */
+   * Breaking inheritance and assigning access to IF Admin, investor,liaison and Approval Agencys
+   */
+    await Approvals.breakRoleInheritance(false);
+    Approvals.roleAssignments.add(24, 1073741827);
+    Approvals.roleAssignments.add(25, 1073741829);
+    Approvals.roleAssignments.add(26, 1073741829);
+    Approvals.roleAssignments.add(investor, 1073741827);
 
-     //Assigning existing groups to Project Space
-    web.roleAssignments.add(26,1073741829);
-    web.roleAssignments.add(25,1073741829);
-    web.roleAssignments.add(69,1073741830);  
+    await issues.breakRoleInheritance(false);
+    issues.roleAssignments.add(24, 1073741827);
+    issues.roleAssignments.add(25, 1073741829);
+    issues.roleAssignments.add(26, 1073741829);
+    issues.roleAssignments.add(investor, 1073741827);
 
-    web.siteGroups.getByName("Project Investor").users.add(`i:0#.f|membership|${investor}`)
-      .then(function (d) {
-        d.select("Id").get().then(userData => {
-          console.log(userData);
-        });
-      });
+
+  }
+
+  public async _logError(siteURL: string, errorLog: IErrorLog) {
+
+    let web = new Web(siteURL);
+    await web.lists.getByTitle("Exception Log").items.add({
+      Title: errorLog.component,
+      Page: errorLog.page,
+      Module: errorLog.Module,
+      Exception: errorLog.exception.toString()
+    });
   }
 }

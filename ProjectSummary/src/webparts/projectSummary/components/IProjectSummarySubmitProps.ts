@@ -18,7 +18,7 @@ export interface IProjectSummarySubmitState {
   spinner:boolean;
   listID:string;
   ItemId:number;
- 
+  defVale:string;
 }
 
 export interface IListItem {
@@ -51,4 +51,12 @@ export interface IListItem {
   ElectricityMW?: string;
   ElectricityKW?: string;
   ProjectURL?:string;
+}
+
+
+export interface IErrorLog{
+  component?:string;
+  Module?:string;
+  page?:string;
+  exception?:string;
 }

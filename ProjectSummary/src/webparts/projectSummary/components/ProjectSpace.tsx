@@ -1,11 +1,12 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
-import { Label, TextField, PrimaryButton, DefaultButton, DatePicker } from 'office-ui-fabric-react/lib';
+import { Label, TextField, PrimaryButton, DefaultButton, DatePicker, Spinner } from 'office-ui-fabric-react/lib';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
 import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 
 import styles from './ProjectSummary.module.scss';
-import { IProjectSummaryProps, IProjectSummaryState, IListItem, IProjectSpace } from './IProjectSummaryProps';
+import { IProjectSummaryProps, IListItem } from './IProjectSummaryProps';
+import { IErrorLog } from './IProjectSummarySubmitProps';
 import { escape } from '@microsoft/sp-lodash-subset';
 import ProjectApprovals from './ProjectApprovals';
 //import * as CustomJS from 'CustomJS';
@@ -23,6 +24,7 @@ import {
 import { ListFormService } from '../../../Commonfiles/Services/CommonMethods';
 import { IListFormService } from '../../../Commonfiles/Services/ICommonMethods';
 import '../../../Commonfiles/Services/customStyles.css';
+//import '../../../Commonfiles/Services/Custom.css';
 import { ListItemAttachments } from '@pnp/spfx-controls-react/lib/ListItemAttachments';
 import { sp, Web, ItemAddResult } from "@pnp/sp";
 
@@ -60,6 +62,8 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
     public liaisonofficer: number = null;
     public PjtState: string;
     public isActivityChanged: boolean = false;
+    public errorLog: IErrorLog = {};
+
 
 
 
@@ -84,22 +88,13 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
             Approvals: false,
             showPanel: false
         };
-        // SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js', {
-        //     globalExportsName: 'jQuery'
-        // }).catch((error) => {
-
-        // }).then((): Promise<{}> => {
-        //     return SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.MultiFile.js', {
-        //         globalExportsName: 'jQuery'
-        //     });
-        // }).catch((error) => {
-
-        // });        
 
 
         this.listFormService = new ListFormService(props.context.spHttpClient);
         // this.ItemId = Number(window.location.search.split("PID=")[1]);
         this.ItemId = Number(this.props.context.pageContext.web.absoluteUrl.split("/ProjectSpace")[1]);
+
+        //this.listFormService._creatProjectSpace(this.props.context, "Sample11", "Sample11", 25);
 
         if (this.ItemId) {
             const restApi = `${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/GetByTitle('Projects')/items(${this.ItemId})?$select=*,LiaisonOfficer/Id,LiaisonOfficer/EMail&$expand=LiaisonOfficer`;
@@ -107,7 +102,6 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                 .then((response) => {
 
                     let vShowState = false;
-
 
                     if (response.LiaisonOfficerId) {
                         this.setState({
@@ -160,9 +154,11 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                 this.setState({
                     listID: response.Id
                 });
-            });       
-        
-        
+            });
+
+
+
+
         /**
           this.setState({
             loginUser:this.props.context.pageContext.user.email
@@ -234,9 +230,14 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                 bodyContent[id] = value;
             }
         }
+        if (this.liaisonofficer) {
+            bodyContent["LiaisonOfficerId"] = this.liaisonofficer;
+            bodyContent["LiaisonFlag"] = true;
+        }
         if (this.state.Stage !== null)
             bodyContent["ProjectStatus"] = $('#StageId span')[0].textContent + "-" + $('#ActivityId span')[0].textContent;
 
+        bodyContent["sendEmail"] = true;
         let body: string = JSON.stringify(bodyContent);
         return body;
     }
@@ -275,9 +276,13 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
     //function to submit the Project summary and for updates   
     public async updateData() {
         return this.listFormService._getListItemEntityTypeName(this.props.context, "Projects")
-            .then(listItemEntityTypeName => {
+            .then(async listItemEntityTypeName => {
                 let vbody: string = this._getupdateBodyContent(listItemEntityTypeName);
-                return this.props.context.spHttpClient.post(`${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/getbytitle('Projects')/items(${this.ItemId})`, SPHttpClient.configurations.v1, {
+                await this.listFormService._getListItem_etag(this.props.context, "Projects", this.ItemId)
+                    .then((resp) => {
+                        this.etag = resp;
+                    });
+                return await this.props.context.spHttpClient.post(`${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/getbytitle('Projects')/items(${this.ItemId})`, SPHttpClient.configurations.v1, {
                     headers: {
                         'Accept': 'application/json;odata=nometadata',
                         'Content-type': 'application/json;odata=verbose',
@@ -307,7 +312,18 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
 
                 });
 
-            }, (error: any): void => {
+            }, async (error: any): Promise<void> => {
+                this.errorLog = {
+                    component: "Project Summary Update",
+                    page: window.location.href,
+                    Module: "Data updating",
+                    exception: error
+                }
+
+                await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
+                this.setState({
+                    spinner: false
+                });
 
             });
     }
@@ -433,9 +449,9 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                             <div className="">
                                 <div className="profile-info-row">
                                     <h5>
-                                    <a href={this.props.context.pageContext.site.absoluteUrl + '/SitePages/ProjectSummaryUpdate.aspx?PID=' + this.ItemId} target="_blank">Project Summary</a>
+                                        <a href={this.props.context.pageContext.site.absoluteUrl + '/SitePages/Details.aspx?PID=' + this.ItemId} target="_blank">Project Summary</a>
                                     </h5>
-                                </div>                           
+                                </div>
 
                                 <div className="profile-info-row">
                                     <label className="blod">Investors : </label>
@@ -483,7 +499,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.Other ? {} : { display: 'none' }}>
                                     <label className="blod">Other : </label>
-                                    {this.state.items.Productsandassociatedquantities}
+                                    {this.state.items.Other}
                                 </div>
 
                             </div>
@@ -530,13 +546,11 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                         headerText=""
                         closeButtonAriaLabel="Close"
                     >
-                        <div id="loader"></div>
+                        <div>
+                            <Spinner label="We are working, please wait..." ariaLive="assertive" labelPosition="right" />
+                        </div>
                     </Panel>
                 </div>
-
-
-
-
 
                 <div>
                     <Panel

@@ -5,8 +5,7 @@ import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dia
 import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 
 import styles from './ProjectSummary.module.scss';
-import { IProjectSummaryProps, IListItem, } from './IProjectSummaryProps';
-import {  IErrorLog } from './IProjectSummarySubmitProps';
+import { IProjectSummaryProps, IProjectSummaryState, IListItem, IProjectSpace } from './IProjectSummaryProps';
 import { escape } from '@microsoft/sp-lodash-subset';
 //import * as CustomJS from 'CustomJS';
 import * as $ from 'jQuery';
@@ -43,7 +42,7 @@ export interface IProjectSummarySubmissionState {
 }
 
 
-export default class ProjectSummaryUpdate extends React.Component<IProjectSummaryProps, IProjectSummarySubmissionState, {}> {
+export default class SummaryDetails extends React.Component<IProjectSummaryProps, IProjectSummarySubmissionState, {}> {
 
     private listFormService: IListFormService;
     private fields = [];
@@ -54,7 +53,6 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
     public PjtState: string;
     public isActivityChanged: boolean = false;
     public PjtStatus: string;
-    public errorLog: IErrorLog = {};
 
 
 
@@ -75,18 +73,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
             ItemId: null,
             spinner: false
         };
-        // SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js', {
-        //     globalExportsName: 'jQuery'
-        // }).catch((error) => {
-
-        // }).then((): Promise<{}> => {
-        //     return SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.MultiFile.js', {
-        //         globalExportsName: 'jQuery'
-        //     });
-        // }).catch((error) => {
-
-        // });
-
+      
         this.listFormService = new ListFormService(props.context.spHttpClient);
         this.ItemId = Number(window.location.search.split("PID=")[1]);
         this._getProjectActions();
@@ -133,95 +120,13 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                 });
             });
 
-        /**
-          this.setState({
-            loginUser:this.props.context.pageContext.user.email
-          })
-      
-          let data = moment("2/10/2019", "DD/MM/YYYY").format("MM/DD/YYYY");
-          console.log(data);
-      
-          */
-
+       
     }
 
     private _onFormatDate = (date: Date): string => {
         return date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear();
     }
-
-    /**
-       * Gets the schema for all relevant fields for a specified SharePoint list form.     
-       * @param event to capture the type of event.     
-       * @  Method to capture updated in the form.
-       */
-    private handleChange(event) {
-        if (event.target.value !== "") {
-            this.fields.push(event.target.id);
-        }
-    }
-
-    private _getChanges = (internalName: string, event: React.FormEvent<HTMLDivElement>, item: IDropdownOption): void => {
-        //console.log(`Selection change: ${item.text}  ${item.key} ${item.selected ? 'selected' : 'unselected'}`);
-        this.fields.push(internalName);
-        if (internalName == "ActionTaken") {
-            this.ActionTakenKey = Number(item.key);
-            this.PjtStatus = item.text;
-
-            if (item.key == 1) {
-                this.setState({
-                    pjtAccepted: true,
-                    ActionTaken: Number(item.key),
-                    hideDialog: false
-                });
-            }
-            else {
-                this.setState({
-                    pjtAccepted: false,
-                    ActionTaken: Number(item.key)
-                });
-            }
-        }
-    }
-
-
-    private _closeDialog = (): void => {
-        this.setState({ hideDialog: true });
-    }
-
-
-    private _getupdateBodyContent(listItemEntityTypeName: string) {
-        let _fields = [...new Set(this.fields)];
-        var bodyContent = {
-            '__metadata': {
-                'type': listItemEntityTypeName
-            },
-        };
-
-        if (window.navigator.userAgent.indexOf("Trident/") > 0) {
-            _fields = _fields[0]._values;
-        }
-
-        for (let id of _fields) {
-
-            if (id == "ActionTaken") {
-                bodyContent["ActionTakenId"] = this.ActionTakenKey;
-                bodyContent["ProjectStatus"] = this.PjtStatus;
-                if (this.ActionTakenKey == 1) {
-                    bodyContent["LiaisonOfficerId"] = this.liaisonofficer;
-                }
-            }
-            else if (id == "ProjectURL")
-                bodyContent["ProjectURL"] = this.state.pjtSpace;
-            else {
-                let value = (document.getElementById(id) as HTMLInputElement).value;
-                bodyContent[id] = value;
-            }
-        }
-        bodyContent["sendEmail"] = true;
-        let body: string = JSON.stringify(bodyContent);
-        return body;
-    }
-
+    
     //function to get the project Actions passing Webcontext and restAPI url
     public _getProjectActions() {
         const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Actions Master')/items`;
@@ -235,88 +140,8 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
     }
 
 
-    //function to capture People picker.
-    private _getPeoplePickerItems(items: any[]) {
-        for (let item of items) {
-            this.liaisonofficer = item.id;
-        }
-    }
-
-    //function to submit the Project summary and for updates   
-    public async updateData() {
-        return this.listFormService._getListItemEntityTypeName(this.props.context, "Projects")
-            .then( async listItemEntityTypeName => {
-                let vbody: string = this._getupdateBodyContent(listItemEntityTypeName);
-                await this.listFormService._getListItem_etag(this.props.context, "Projects", this.ItemId)
-                .then((resp) => {
-                    this.etag = resp;
-                });
-                return await this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Projects')/items(${this.ItemId})`, SPHttpClient.configurations.v1, {
-                    headers: {
-                        'Accept': 'application/json;odata=nometadata',
-                        'Content-type': 'application/json;odata=verbose',
-                        'odata-version': '',
-                        'IF-MATCH': this.etag,
-                        'X-HTTP-Method': 'MERGE'
-                    },
-                    body: vbody
-                });
-            }).then((response: SPHttpClientResponse): void => {
-                this.setState({
-                    spinner: false
-                });
-                alert("Project Status updated Successfully");
-                window.location.href = this.props.context.pageContext.web.absoluteUrl;
-
-            }, async (error: any): Promise<void> => {
-                this.errorLog = {
-                    component: "Project Summary Update",
-                    page: window.location.href,
-                    Module: "Data updating",
-                    exception: error
-                }
-    
-                await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
-                this.setState({
-                    spinner: false
-                });
-
-            });
-    }
-
-    private _submitform() {
-
-        if(this.ActionTakenKey == 1 && !this.liaisonofficer){
-            alert("Liaison Officer is required");
-            return false;
-        }
-
-        this.setState({
-            spinner: true
-        });
-        this.updateData();
-
-    }
-
-    public ProjectSpace() {
-        this.setState({
-            spinner: true
-        });
-        let vsiteurl = `ProjectSpace${this.ItemId}`;
-        let vsiteTitle = this.state.items.Title;
-        let vsiteDesp = this.state.items.ProjectDescription;
-
-        this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl,this.state.items.InvestorId)
-            .then((responseJSON) => {
-                this.fields.push("ProjectURL");
-                this.setState({
-                    hideDialog: true,
-                    pjtSpace: responseJSON.ServerRelativeUrl == undefined ? `${this.props.context.pageContext.site.absoluteUrl}/ProjectSpace${this.ItemId}` : `https://ttengage.sharepoint.com${responseJSON.ServerRelativeUrl}`,
-                    spinner: false
-                });
-            });
-    }
-
+   
+ 
 
     public render(): React.ReactElement<IProjectSummaryProps> {
         return (
@@ -444,7 +269,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
 
                     </div>
 
-                    <div className="widget-Actions" style={(this.state.isAdmin || this.state.items.ActionTakenId) ? {} : { display: 'none' }}>
+                    <div className="widget-Actions">
                         <div className="widget-body">
                             <div className="widget-main padding-8">
                                 <div className="row">
@@ -457,36 +282,13 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                                                     defaultSelectedKey={this.state.ActionTaken}
                                                     placeholder="Select an Action"
                                                     label=''
-                                                    disabled={(this.state.items.ActionTakenId !== '1' && this.state.isAdmin) ? false : true}
+                                                    disabled={true}
                                                     options={this.state.Actions.map((item: any) => { return { key: item.ID, text: item.Title }; })}
-                                                    onChange={this._getChanges.bind(this, "ActionTaken")}
-
+                                                   
                                                 />
                                             </div>
                                         </div>
-                                        <div className="profile-info-row" style={this.state.pjtAccepted ? {} : { display: 'none' }}>
-                                            <div className="profile-info-name">Liaison Officer <span style={{ color: "red" }}>*</span></div>
-                                            <div className="profile-info-value">
-                                                <PeoplePicker context={this.props.context}
-                                                    personSelectionLimit={1}
-                                                    groupName={""}
-                                                    showtooltip={true}
-                                                    isRequired={true}
-                                                    ensureUser={true}
-                                                    selectedItems={this._getPeoplePickerItems.bind(this)}
-                                                    showHiddenInUI={false}
-                                                    principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
-                                                    resolveDelay={1500}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="profile-info-row">
-                                            <div className="profile-info-name">Comments</div>
-                                            <div className="profile-info-value">
-                                                <TextField id="Comments" label="" underlined multiline rows={3} onBlur={this.handleChange.bind(this)} disabled={this.state.isAdmin ? false : true} value={this.state.items.Comments}/>
-                                            </div>
-                                        </div>
-
+                                       
                                     </div>
                                 </div>
                             </div>
@@ -505,44 +307,8 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                     }
 
                     <div className={styles.pullright}>
-
-                        <PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()} style={(this.state.isAdmin && this.state.items.ActionTakenId !== '1') ? {} : { display: 'none' }}></PrimaryButton>
-                        &nbsp;&nbsp;<PrimaryButton title="Close" text="Close" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
+                        &nbsp;&nbsp;<PrimaryButton title="Back" text="Back" allowDisabledFocus onClick={()=>{window.history.back()}}></PrimaryButton>
                     </div>
-
-                    <div>
-                        <Dialog hidden={this.state.hideDialog}
-                            onDismiss={this._closeDialog}
-                            dialogContentProps={{
-                                type: DialogType.normal,
-                                title: 'Project Confirmation',
-                                subText: 'Please confirm that you wish to change the status to Accepted for Facilitation ?'
-                            }}
-                            modalProps={{
-                                isBlocking: true,
-                                styles: { main: { maxWidth: 450 } }
-                            }}>
-                            <DialogFooter>
-                                <PrimaryButton onClick={this.ProjectSpace.bind(this)} text="Yes" />
-                                <DefaultButton onClick={this._closeDialog} text="Cancel" />
-                            </DialogFooter>
-                        </Dialog>
-
-
-                    </div>
-                    <div>
-                        <Panel
-                            isOpen={this.state.spinner}
-                            type={PanelType.custom}
-                            headerText=""
-                            closeButtonAriaLabel="Close"
-                        >
-                            <div>
-                                <Spinner label="We are working, please wait..." ariaLive="assertive" labelPosition="right" />
-                            </div>
-                        </Panel>
-                    </div>
-
 
                 </div>
             </div >

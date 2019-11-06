@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
-import { Label, TextField, PrimaryButton, DefaultButton, Checkbox } from 'office-ui-fabric-react/lib';
+import { Label, TextField, PrimaryButton, DefaultButton, Checkbox, Panel, PanelType, Spinner } from 'office-ui-fabric-react/lib';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
 
 import styles from './ProjectSummary.module.scss';
@@ -55,7 +55,8 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
             Category: [],
             Agency: null,
             pjtItem: {},
-            showPanel: true
+            showPanel: true,
+            spinner:false
 
         };
 
@@ -220,7 +221,7 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
                 if ((this.items.indexOf(Number(itemID)) > -1) || (this.items.indexOf(itemID) > -1)) {
                     this.delteItems = this.delteItems.filter(function (ele) {
                         return ele != itemID;
-                    });                  
+                    });
                 }
             }
 
@@ -236,22 +237,20 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
         }).then(i => {
             console.log(i);
             this._submitData();
-            if(this.delteItems.length > 0)
-            {
+            if (this.delteItems.length > 0) {
                 this._deleteItems();
             }
         });
     }
 
     private _deleteItems() {
-        for(let dItem of this.delteItems)
-        {
+        for (let dItem of this.delteItems) {
             sp.web.lists.getByTitle("Approvals").items.top(1).filter(`ApprovalID eq '${dItem}'`).get().then((items: any[]) => {
                 if (items.length > 0) {
-                    sp.web.lists.getByTitle("Approvals").items.getById(items[0].Id).delete().then(_ => {});
+                    sp.web.lists.getByTitle("Approvals").items.getById(items[0].Id).delete().then(_ => { });
                 }
             });
-        }     
+        }
 
     }
 
@@ -313,6 +312,19 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
 
                 {/* <DefaultButton
                     text="Cancel"></DefaultButton>                */}
+
+                <div>
+                    <Panel
+                        isOpen={this.state.spinner}
+                        type={PanelType.custom}
+                        headerText=""
+                        closeButtonAriaLabel="Close"
+                    >
+                        <div>
+                            <Spinner label="We are working, please wait..." ariaLive="assertive" labelPosition="right" />
+                        </div>
+                    </Panel>
+                </div>
 
             </div>
         );

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styles from './PromotionResponse.module.scss';
-import { IPromotionResponseProps, IPromotionResponseState, IListItem } from './IPromotionResponseProps';
+import { IPromotionResponseProps, IPromotionResponseState, IErrorLog } from './IPromotionResponseProps';
 import { escape } from '@microsoft/sp-lodash-subset';
 import { Label, TextField, PrimaryButton, DefaultButton, DatePicker,Spinner } from 'office-ui-fabric-react/lib';
 import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
@@ -8,19 +8,22 @@ import { SPComponentLoader } from '@microsoft/sp-loader';
 //import * as $ from 'jquery';
 import * as CustomJS from 'CustomJS';
 
+
 import { ListFormService } from '../../../Commonfiles/Services/CommonMethods';
 import { IListFormService } from '../../../Commonfiles/Services/ICommonMethods';
 import * as moment from 'moment';
 import { SPHttpClient } from '@microsoft/sp-http';
 import { string } from 'prop-types';
 import { sp, Web } from "@pnp/sp";
-import '../../../Commonfiles/Services/customStyles.css';
+//import '../../../Commonfiles/Services/customStyles.css';
+import '../../../Commonfiles/Services/Custom.css';
 
 export default class PromotionResponseNew extends React.Component<IPromotionResponseProps, IPromotionResponseState, {}> {
 
     private listFormService: IListFormService;
     private fields = [];
     public PItemId: number;
+    public errorLog: IErrorLog = {};
 
     constructor(props: IPromotionResponseProps) {
         super(props);
@@ -115,7 +118,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                 bodyContent["ProposedStartDate"] = new Date(vDate);
             }
             else {
-                let value = (document.getElementById(id) as HTMLInputElement).value;
+                let value = (document.getElementById(id) as HTMLInputElement).value.toString().trim();
                 bodyContent[id] = value;
             }
         }
@@ -175,10 +178,11 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
         this._SaveData();
     }
 
-    private _SaveData() {
+    private async _SaveData() {
         this.setState({
             spinner: true
         });
+        try{
 
         var listTitle = null;
 
@@ -198,8 +202,15 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                     },
                     body: vbody
                 });
-            }).then(response => {
-                return response.json();
+            }).then(async response => {
+                if (!response.ok) {
+                    const respText = await response.text();
+                    throw new Error(respText.toString());
+
+                }
+                else {
+                    return response.json();
+                }
             })
             .then((item) => {
                 console.log(item.Id);
@@ -237,6 +248,20 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                     window.location.href = `${this.props.context.pageContext.web.absoluteUrl}/SitePages/ProjectsonOffer.aspx`;
                 }
             });
+        }
+        catch (error) {
+            this.errorLog = {
+                component: "Project Summary Submittion",
+                page: window.location.href,
+                Module: "Data Save",
+                exception: error
+            }
+
+            await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
+            this.setState({
+                spinner: false
+            });
+        }
     }
 
 
@@ -256,7 +281,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                         <div className="profile-info-row">
                                             <div className="profile-info-name">Promotion Title</div>
                                             <div className="profile-info-value">
-                                                <TextField id="Title" underlined placeholder={this.state.items.Title} onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.Title} disabled />
+                                                <TextField id="Title" underlined placeholder={this.state.items.Title} onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.Title} readOnly />
                                             </div>
                                         </div>
                                         <div className="profile-info-row">
@@ -325,46 +350,46 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                         </div>
 
                                         <div className="profile-info-row">
+                                        <div className="profile-info-name">Port Requirements </div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Port" label="" multiline rows={3} className="wd100" underlined onBlur={this.handleChange.bind(this)} />
+                                            </div>
                                             <div className="profile-info-name">Natural Gas Requirements</div>
                                             <div className="profile-info-value">
                                                 <TextField id="Naturalgas" className="wd100" underlined onBlur={this.handleChange.bind(this)} suffix="mmscf/d" />
+                                            </div>                                           
+                                        </div>
+                                        <div className="profile-info-row">
+                                        <div className="profile-info-name">Warehousing Requirement </div>
+                                            <div className="profile-info-value">
+                                                <TextField id="WarehousingRequirements" multiline rows={3} className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} />
                                             </div>
                                             <div className="profile-info-name">Electricity </div>
                                             <div className="profile-info-value">
                                                 <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field wd100" underlined onBlur={this.handleChange.bind(this)} suffix="MW" />
                                                 <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field wd100" underlined onBlur={this.handleChange.bind(this)} suffix="kVA" />
-                                            </div>
+                                            </div>  
                                         </div>
                                         <div className="profile-info-row">
+                                        <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
+                                            <div className="profile-info-value">
+                                                <TextField id="PotentialSaving" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} />
+                                            </div>
                                             <div className="profile-info-name">Water Consumption</div>
                                             <div className="profile-info-value">
                                                 <TextField id="Water" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} suffix="m³/month" />
                                             </div>
 
-                                            <div className="profile-info-name">Land Requirement </div>
-                                            <div className="profile-info-value">
-                                                <TextField id="Land" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} suffix="hectares" />
-                                            </div>
+                                          
                                         </div>
-                                        <div className="profile-info-row">
-                                            <div className="profile-info-name">Port Requirements </div>
-                                            <div className="profile-info-value">
-                                                <TextField id="Port" label="" multiline rows={3} className="wd100" underlined onBlur={this.handleChange.bind(this)} />
-                                            </div>
-
-                                            <div className="profile-info-name">Warehousing Requirement </div>
-                                            <div className="profile-info-value">
-                                                <TextField id="WarehousingRequirements" multiline rows={3} className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} />
-                                            </div>
-                                        </div>
-                                        <div className="profile-info-row">
-                                            <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
-                                            <div className="profile-info-value">
-                                                <TextField id="PotentialSaving" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} />
-                                            </div>
+                                        <div className="profile-info-row">                                          
                                             <div className="profile-info-name">Other </div>
                                             <div className="profile-info-value">
                                                 <TextField id="Other" label="" multiline rows={3} className="wd100" underlined onBlur={this.handleChange.bind(this)} />
+                                            </div>
+                                            <div className="profile-info-name">Land Requirement </div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Land" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} suffix="hectares" />
                                             </div>
                                         </div>
                                     </div>
@@ -389,7 +414,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                     <div className={styles.pullright}>
                         <PrimaryButton title="Clear" text="Clear" allowDisabledFocus onClick={() => this._buttonClear()}></PrimaryButton>
                         &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
-                        &nbsp;&nbsp;<PrimaryButton title="Cancel" text="Cancel" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
+                        &nbsp;&nbsp;<PrimaryButton title="Close" text="Close" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
                     </div>
 
                     {/* <div className={styles.row}>

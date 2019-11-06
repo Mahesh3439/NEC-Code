@@ -74,6 +74,7 @@
   .pullright
   {
     float: right;
+    margin: 10px;
   }
 
   .Requirement
@@ -113,24 +114,3 @@
 
 }
 
-@media only screen and (min-width: 769px) {
-  [class^="ms-Label"]
-  {
-    width: 20% !important;
-    float: left !important;
-  }
-
-  [class^="Electricity"]
-  {
-    width: 36% !important;
-    display: table-cell !important;    
-  }
-  
-}
-
-@media only screen and (max-width: 769px) {
-  .ms-TextField.Electricity{    
-    margin: 10 0px !important;
-    height: 27px !important;
-  }
-}

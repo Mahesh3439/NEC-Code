@@ -1,0 +1,31 @@
+@media only screen and (min-width: 769px) {
+  
+.profile-info-name {
+  text-align: right;
+  padding: 6px 10px 6px 4px;
+  font-weight: 400;
+  color: #667e99;
+  background-color: transparent;
+  width: 20% !important;
+  vertical-align: middle;
+}
+   
+}
+
+
+input:read-only,
+textarea:read-only
+{
+  background-color: #f4f4f4;
+}
+
+
+.right .profile-info-row
+{
+  display: block !important;
+}
+
+h4{
+  margin: 5px 0px;
+  font-size: 18px;
+}

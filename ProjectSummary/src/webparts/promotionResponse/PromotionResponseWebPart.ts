@@ -13,6 +13,7 @@ import PromotionResponse from './components/PromotionResponse';
 import PromotionResponseNew from './components/PromotionResponseNew';
 import PromotionResponseEdit from './components/PromotionResponseEdit';
 import { IPromotionResponseProps } from './components/IPromotionResponseProps';
+import { SPComponentLoader } from '@microsoft/sp-loader';
 
 export interface IPromotionResponseWebPartProps {
   description: string;
@@ -23,6 +24,9 @@ export interface IPromotionResponseWebPartProps {
 export default class PromotionResponseWebPart extends BaseClientSideWebPart<IPromotionResponseWebPartProps> {
 
   public render(): void {
+    let cssURL=`${this.context.pageContext.site.absoluteUrl}/SiteAssets/CustomCSS.css`;
+    SPComponentLoader.loadCss(cssURL);
+
     if (this.properties.FormType == "New") {
       const element: React.ReactElement<IPromotionResponseProps> = React.createElement(
         PromotionResponseNew,

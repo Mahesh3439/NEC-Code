@@ -13,6 +13,7 @@ export interface IProjectApprovalsState {
   Agency:string;
   pjtItem:IProjectListItem;
   showPanel:boolean;
+  spinner: boolean;
 }
 
 export interface IListItem {

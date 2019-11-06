@@ -6,7 +6,7 @@ import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 
 import styles from './ProjectSummary.module.scss';
 //import { IProjectSummaryProps, IProjectSummaryState, IListItem, IProjectSpace } from './IProjectSummaryProps';
-import { IProjectSummarySubmitProps, IProjectSummarySubmitState, IListItem } from './IProjectSummarySubmitProps';
+import { IProjectSummarySubmitProps, IProjectSummarySubmitState, IErrorLog } from './IProjectSummarySubmitProps';
 import { escape } from '@microsoft/sp-lodash-subset';
 import * as CustomJS from 'CustomJS';
 //import * as $ from 'jQuery';
@@ -24,8 +24,10 @@ import { ListFormService } from '../../../Commonfiles/Services/CommonMethods';
 import { IListFormService } from '../../../Commonfiles/Services/ICommonMethods';
 import { sp, Web } from "@pnp/sp";
 
-import '../../../Commonfiles/Services/customStyles.css';
+//import '../../../Commonfiles/Services/customStyles.css';
+import '../../../Commonfiles/Services/Custom.css';
 import { ListItemAttachments } from '@pnp/spfx-controls-react/lib/ListItemAttachments';
+import { func } from 'prop-types';
 
 
 export default class ProjectSummarySubmit extends React.Component<IProjectSummarySubmitProps, IProjectSummarySubmitState, {}> {
@@ -37,7 +39,10 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
     public liaisonofficer: number = null;
     public investor: number = null;
     public PjtState: string;
-
+    public PjtTitle: string;
+    public pjtDesc: string;
+    public selectedDate: Date;
+    public errorLog: IErrorLog = {};
     constructor(props: IProjectSummarySubmitProps) {
         super(props);
         // Initiate the component state
@@ -54,15 +59,16 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             pjtSpace: null,
             spinner: false,
             listID: null,
-            ItemId: null
+            ItemId: null,
+            defVale: ""
 
         };
-        SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js', {
+        SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
             globalExportsName: 'jQuery'
         }).catch((error) => {
 
         }).then((): Promise<{}> => {
-            return SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.MultiFile.js', {
+            return SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.MultiFile.js`, {
                 globalExportsName: 'jQuery'
             });
         }).catch((error) => {
@@ -88,26 +94,6 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             CustomJS.load();
         }, 3000);
 
-
-
-        const listrestApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Projects')`;
-        this.listFormService._getListItem(this.props.context, listrestApi)
-            .then((response) => {
-                this.setState({
-                    listID: response.Id
-                });
-            });
-
-        /**
-          this.setState({
-            loginUser:this.props.context.pageContext.user.email
-          })
-      
-          let data = moment("2/10/2019", "DD/MM/YYYY").format("MM/DD/YYYY");
-          console.log(data);
-      
-          */
-
     }
 
     //Method to convert single line text to multy line field in html.
@@ -119,7 +105,8 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
     }
 
     private _onSelectDate = (date: Date | null | undefined): void => {
-        this.setState({ startDate: date });
+        //this.setState({ startDate: date });
+        this.selectedDate = date;
         this.fields.push("ProposedStartDate-label");
     }
 
@@ -127,11 +114,6 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
         return date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear();
     }
 
-    //   public componentDidMount(): void {
-    //     setTimeout(function () {
-    //       CustomJS.load();
-    //     }, 3000);
-    //   }
 
     /**
        * Gets the schema for all relevant fields for a specified SharePoint list form.     
@@ -173,6 +155,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
 
     //function to generate dynamic data body to create an item.
     private _getContentBody(listItemEntityTypeName: string) {
+
         let _fields = [...new Set(this.fields)];
 
         if (window.navigator.userAgent.indexOf("Trident/") > 0) {
@@ -199,12 +182,13 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
 
             }
             else {
-                let value = (document.getElementById(id) as HTMLInputElement).value;
+                let value = (document.getElementById(id) as HTMLInputElement).value.toString().trim();
                 bodyContent[id] = value;
             }
         }
         bodyContent["PromotionType"] = "Direct";
         bodyContent["InvestorId"] = Number($('.ms-Persona')[0].id);
+        bodyContent["sendEmail"] = true;
         bodyContent["ProjectStatus"] = this.ActionTakenKey == 1 ? "Accepted for Facilitation" : "Submitted";
 
         let body: string = JSON.stringify(bodyContent);
@@ -239,30 +223,19 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
     }
 
     private _buttonClear() {
-        (document.getElementById("Title") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("ProjectDescription") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("Listofinvestors") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("Title") as HTMLInputElement).defaultValue = "";
 
-        (document.getElementById("Productsandassociatedquantities") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("CapitalExpenditure") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("Naturalgas") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("ElectricityMW") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("ElectricityKW") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("Water") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("Land") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("Port") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("WarehousingRequirements") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("PotentialSaving") as HTMLInputElement).defaultValue = "";
-        (document.getElementById("Other") as HTMLInputElement).defaultValue = "";
+        this.setState({
+            defVale: null
+        });
+        this.fields = [];
 
-        $("input").val("");
-        $("textarea").val("");
+        // $("input").val("");
+        // $("textarea").val("");
 
     }
 
-    public ItemAttachments() {
-      //  this.ItemId = 94;
+    public async ItemAttachments() {
+        //  this.ItemId = 94;
         console.log(this.ItemId);
         let attachemnts = $("#Attachments input:file");
         if (attachemnts.length > 1) {
@@ -277,10 +250,10 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 }
             });
 
-            let siteURL = this.props.context.pageContext.web.absoluteUrl;  
-            let web = new Web(siteURL)
+            let siteURL = this.props.context.pageContext.web.absoluteUrl;
+            let web = new Web(siteURL);
             let ListItem = web.lists.getByTitle("Projects").items.getById(this.ItemId);
-            ListItem.attachmentFiles.addMultiple(itemAttachments)
+            await ListItem.attachmentFiles.addMultiple(itemAttachments)
                 .then(r => {
                     console.log(r);
                     this.setState({
@@ -288,15 +261,26 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                     });
                     alert("Project Successfully submitted");
                     window.location.href = this.props.context.pageContext.web.absoluteUrl;
-                }).catch(function (err) {
-                    alert(err);
+                }).catch(async function (err) {
+                    this.errorLog = {
+                        component: "Project Summary Submittion",
+                        page: window.location.href,
+                        Module: "Attachments save",
+                        exception: err
+                    }
+        
+                    await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
+                    this.setState({
+                        spinner: false
+                    });
+                   
                 });
         }
         else {
             this.setState({
                 spinner: false
             });
-            alert("Successfully submitted....");
+            alert("Project Successfully submitted");
             window.location.href = this.props.context.pageContext.web.absoluteUrl;
         }
 
@@ -304,20 +288,45 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
 
     //function to submit the Project summary and for updates
     private async SaveData() {
-        return this.listFormService._getListItemEntityTypeName(this.props.context, "Projects")
-            .then(listItemEntityTypeName => {
-                let vbody: string = this._getContentBody(listItemEntityTypeName);
-                return this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Projects')/items`, SPHttpClient.configurations.v1, {
-                    headers: {
-                        'Accept': 'application/json;odata=nometadata',
-                        'Content-type': 'application/json;odata=verbose',
-                        'odata-version': ''
-                    },
-                    body: vbody
+        try {
+            return await this.listFormService._getListItemEntityTypeName(this.props.context, "Projects")
+                .then(async listItemEntityTypeName => {
+                    let vbody: string = this._getContentBody(listItemEntityTypeName);
+                    this.setState({
+                        spinner: true
+                    });
+                    return await this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Projects')/items`, SPHttpClient.configurations.v1, {
+                        headers: {
+                            'Accept': 'application/json;odata=nometadata',
+                            'Content-type': 'application/json;odata=verbose',
+                            'odata-version': ''
+                        },
+                        body: vbody
+                    });
+                }).then(async response => {
+                    if (!response.ok) {
+                        const respText = await response.text();
+                        throw new Error(respText.toString());
+
+                    }
+                    else {
+                        return response.json();
+                    }
                 });
-            }).then(response => {
-                return response.json();
+        }
+        catch (error) {
+            this.errorLog = {
+                component: "Project Summary Submittion",
+                page: window.location.href,
+                Module: "Data Save",
+                exception: error
+            }
+
+            await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
+            this.setState({
+                spinner: false
             });
+        }
     }
 
     private _submitform() {
@@ -347,13 +356,11 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             return false;
         }
 
-        this.setState({
-            spinner: true
-        });
-
         this.SaveData()
             .then((resp) => {
                 this.ItemId = resp.Id;
+                this.PjtTitle = resp.Title;
+                this.pjtDesc = resp.ProjectDescription
                 if (this.state.pjtAccepted == true) {
                     this.ProjectSpace();
                 }
@@ -365,14 +372,14 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
 
     public ProjectSpace() {
         let vsiteurl = `ProjectSpace${this.ItemId}`;
-        let vsiteTitle = this.state.items.Title;
-        let vsiteDesp = this.state.items.ProjectDescription;
+        let vsiteTitle = this.PjtTitle;
+        let vsiteDesp = this.pjtDesc;
 
-        this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl,"")
+        this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl, this.investor)
             .then((responseJSON) => {
                 this.fields.push("ProjectURL");
                 this.setState({
-                    pjtSpace: responseJSON.ServerRelativeUrl
+                    pjtSpace: responseJSON.ServerRelativeUrl == undefined ? `${this.props.context.pageContext.site.absoluteUrl}/ProjectSpace${this.ItemId}` : `https://ttengage.sharepoint.com${responseJSON.ServerRelativeUrl}`
                 });
 
                 this.listFormService._getListItemEntityTypeName(this.props.context, "Projects")
@@ -381,7 +388,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                             '__metadata': {
                                 'type': listItemEntityTypeName
                             },
-                            'ProjectURL': `https://ttengage.sharepoint.com${this.state.pjtSpace}`
+                            'ProjectURL': `${this.state.pjtSpace}`
                         });
                         return this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Projects')/items(${this.ItemId})`, SPHttpClient.configurations.v1, {
                             headers: {
@@ -440,7 +447,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                                 <DatePicker placeholder="Select a start date..."
                                                     id="ProposedStartDate"
                                                     onSelectDate={this._onSelectDate}
-                                                    value={this.state.startDate}
+                                                    value={this.selectedDate}
                                                     formatDate={this._onFormatDate}
                                                     minDate={new Date()}
                                                     underlined
@@ -481,11 +488,22 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                             </div>
                                         </div>
                                         <div className="profile-info-row">
+                                            <div className="profile-info-name">Port Requirements </div>
+                                            <div className="profile-info-value">
+                                                <TextField className="wd100" id="Port" label="" multiline rows={3} underlined onBlur={this.handleChange.bind(this)} />
+                                            </div>
                                             <div className="profile-info-name">Natural Gas Usage</div>
                                             <div className="profile-info-value">
                                                 <TextField className="wd100" id="Naturalgas" underlined onBlur={this.handleChange.bind(this)} suffix="mmscf/d" />
                                             </div>
 
+
+                                        </div>
+                                        <div className="profile-info-row">
+                                            <div className="profile-info-name">Warehousing Requirements </div>
+                                            <div className="profile-info-value">
+                                                <TextField className="wd100" id="WarehousingRequirements" multiline rows={3} label="" underlined onBlur={this.handleChange.bind(this)} />
+                                            </div>
                                             <div className="profile-info-name">Electricity </div>
                                             <div className="profile-info-value">
                                                 <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field" underlined onBlur={this.handleChange.bind(this)} suffix="MW" />
@@ -494,38 +512,26 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                             </div>
                                         </div>
                                         <div className="profile-info-row">
+                                            <div className="profile-info-name">If Energy Efficient Project, Potential Savings </div>
+                                            <div className="profile-info-value">
+                                                <TextField className="wd100" id="PotentialSaving" label="" underlined onBlur={this.handleChange.bind(this)} />
+                                            </div>
                                             <div className="profile-info-name">Water Consumption</div>
                                             <div className="profile-info-value">
                                                 <TextField className="wd100" id="Water" label="" underlined onBlur={this.handleChange.bind(this)} suffix="m³/month" />
                                             </div>
 
+                                        </div>
+                                        <div className="profile-info-row">
+
+                                            <div className="profile-info-name">Other </div>
+                                            <div className="profile-info-value">
+                                                <TextField className="wd100" id="Other" multiline rows={3} label="" underlined onBlur={this.handleChange.bind(this)} />
+                                            </div>
+
                                             <div className="profile-info-name">Land Requirements </div>
                                             <div className="profile-info-value">
                                                 <TextField className="wd100" id="Land" label="" underlined onBlur={this.handleChange.bind(this)} suffix="hectares" />
-                                            </div>
-                                        </div>
-                                        <div className="profile-info-row">
-                                            <div className="profile-info-name">Port Requirements </div>
-                                            <div className="profile-info-value">
-                                                <TextField className="wd100" id="Port" label="" multiline rows={3} underlined onBlur={this.handleChange.bind(this)} />
-                                            </div>
-
-                                            <div className="profile-info-name">Warehousing Requirements </div>
-                                            <div className="profile-info-value">
-                                                <TextField className="wd100" id="WarehousingRequirements" multiline rows={3} label="" underlined onBlur={this.handleChange.bind(this)} />
-                                            </div>
-                                        </div>
-                                        <div className="profile-info-row">
-                                            <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
-                                            <div className="profile-info-value">
-                                                <TextField className="wd100" id="PotentialSaving" label="" underlined onBlur={this.handleChange.bind(this)} />
-                                            </div>
-
-                                            <div className="profile-info-name">Other </div>
-
-                                            <div className="profile-info-value">
-
-                                                <TextField className="wd100" id="Other" multiline rows={3} label="" underlined onBlur={this.handleChange.bind(this)} />
                                             </div>
                                         </div>
                                     </div>
@@ -626,7 +632,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 <div className={styles.pullright}>
                     <PrimaryButton title="Clear" text="Clear" allowDisabledFocus onClick={() => this._buttonClear()}></PrimaryButton>
                     &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
-                    &nbsp;&nbsp;<PrimaryButton title="Cancel" text="Cancel" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
+                    &nbsp;&nbsp;<PrimaryButton title="Close" text="Close" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
                 </div>
 
                 <div>
@@ -666,3 +672,6 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
         );
     }
 }
+
+
+

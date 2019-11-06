@@ -15,6 +15,7 @@ import ProjectSummary from './components/ProjectSummary';
 import ProjectSummarySubmit from './components/ProjectSummarySubmit';
 import ProjectSummaryUpdate from './components/ProjectSummaryUpdate';
 import ProjectSpace from './components/ProjectSpace';
+import SummaryDetails from './components/SummaryDetails';
 import ProjectApprovals from './components/ProjectApprovals';
 import { IProjectSummaryProps } from './components/IProjectSummaryProps';
 
@@ -30,10 +31,12 @@ export interface IProjectSummaryWebPartProps {
 }
 
 export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjectSummaryWebPartProps> {
-
+  
 
   public render(): void {
     //const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
+      let cssURL=`${this.context.pageContext.site.absoluteUrl}/SiteAssets/CustomCSS.css`;
+      SPComponentLoader.loadCss(cssURL);
    
       if (this.properties.FormType == "New") {
         const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
@@ -58,6 +61,16 @@ export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjec
       else if (this.properties.FormType == "ProjectSpace") {
         const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
           ProjectSpace,
+          {
+            context: this.context
+          }
+        );
+  
+        ReactDom.render(element, this.domElement);
+      }
+      else if (this.properties.FormType == "View") {
+        const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
+          SummaryDetails,
           {
             context: this.context
           }
@@ -104,7 +117,8 @@ export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjec
                   label: 'Form Type',
                   options: [
                     { key: 'New', text: 'New' },
-                    { key: 'Edit', text: 'Edit' },
+                    { key: 'Edit',text: 'Edit' },
+                    { key: 'View', text: 'View' },
                     { key: 'ProjectSpace', text: 'ProjectSpace' }
                     // { key: 'Approvals', text: 'Approvals' }
                    
