@@ -14,7 +14,7 @@ import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dia
 import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 
 import { ListFormService } from '../../../Commonfiles/Services/CommonMethods';
-import { IListFormService } from '../../../Commonfiles/Services/ICommonMethods';
+import { IListFormService,IcreateSpace } from '../../../Commonfiles/Services/ICommonMethods';
 import * as moment from 'moment';
 import { SPHttpClient } from '@microsoft/sp-http';
 import { string } from 'prop-types';
@@ -34,6 +34,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
   public prmStatus: string;
   public investorEmail: string;
   public errorLog: IErrorLog = {};
+  public crtSpace:IcreateSpace={};
 
 
   constructor(props: IPromotionResponseProps) {
@@ -286,7 +287,18 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
           let itemID = resp.Id;
           let vsiteurl = `ProjectSpace${itemID}`;
           let vsiteTitle = resp.Title;
-          this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl, Number(this.state.items.AuthorId))
+
+          this.crtSpace = {
+            Title:this.state.items.PjtTitle,
+            url:vsiteurl,
+            Description:this.state.items.ProjectDescription,
+            investorId:this.state.items.AuthorId,
+            investorEmail:this.investorEmail,
+            context:this.props.context,
+            httpReuest:this.props.httpRequest
+
+        }
+          this.listFormService._creatProjectSpace(this.crtSpace)
             .then((responseJSON) => {
               this.setState({
                 pjtSpace: responseJSON.ServerRelativeUrl

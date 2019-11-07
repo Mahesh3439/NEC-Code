@@ -21,7 +21,7 @@ import {
     IDropdownOption
 } from "office-ui-fabric-react/lib/Dropdown";
 import { ListFormService } from '../../../Commonfiles/Services/CommonMethods';
-import { IListFormService } from '../../../Commonfiles/Services/ICommonMethods';
+import { IListFormService, IcreateSpace } from '../../../Commonfiles/Services/ICommonMethods';
 import { sp, Web } from "@pnp/sp";
 
 //import '../../../Commonfiles/Services/customStyles.css';
@@ -43,6 +43,9 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
     public pjtDesc: string;
     public selectedDate: Date;
     public errorLog: IErrorLog = {};
+    public crtSpace: IcreateSpace = {};
+
+
     constructor(props: IProjectSummarySubmitProps) {
         super(props);
         // Initiate the component state
@@ -77,6 +80,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
 
         this.listFormService = new ListFormService(props.context.spHttpClient);
         this._getProjectActions();
+
 
         this.listFormService._getloginusergroups(this.props.context)
             .then((response) => {
@@ -268,12 +272,12 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                         Module: "Attachments save",
                         exception: err
                     }
-        
+
                     await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
                     this.setState({
                         spinner: false
                     });
-                   
+
                 });
         }
         else {
@@ -371,11 +375,18 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
     }
 
     public ProjectSpace() {
-        let vsiteurl = `ProjectSpace${this.ItemId}`;
-        let vsiteTitle = this.PjtTitle;
-        let vsiteDesp = this.pjtDesc;
+        let vsiteurl = `ProjectSpace${this.ItemId}`;        
+        this.crtSpace = {
+            Title:this.PjtTitle,
+            url:vsiteurl,
+            Description:this.pjtDesc,
+            investorId:this.investor,
+            investorEmail:$(".ms-Persona-secondaryText")[0].textContent,
+            context:this.props.context,
+            httpReuest:this.props.httpRequest
 
-        this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl, this.investor)
+        }
+        this.listFormService._creatProjectSpace(this.crtSpace)
             .then((responseJSON) => {
                 this.fields.push("ProjectURL");
                 this.setState({

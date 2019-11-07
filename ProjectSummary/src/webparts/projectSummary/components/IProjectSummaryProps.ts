@@ -2,6 +2,7 @@ import { WebPartContext } from '@microsoft/sp-webpart-base';
 
 export interface IProjectSummaryProps {
   context: WebPartContext;
+  httpRequest:string;  
 }
 
 export interface IProjectSummaryState {
@@ -27,8 +28,7 @@ export interface IProjectSummaryState {
   ItemId:number;
   liaisonEmail:string;
   stageStartDate:Date;
-  isLiaison:boolean;
-  
+  isLiaison:boolean; 
   
 }
 

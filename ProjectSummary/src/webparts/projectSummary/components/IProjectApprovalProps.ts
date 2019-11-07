@@ -75,6 +75,7 @@ export interface IProjectListItem {
 export interface ILookupItem {
   Id?:number;
   Title?:string;
+  ShortName?:string;
 
 }
 

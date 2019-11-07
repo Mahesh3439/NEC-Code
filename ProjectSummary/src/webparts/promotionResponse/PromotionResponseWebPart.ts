@@ -19,6 +19,7 @@ export interface IPromotionResponseWebPartProps {
   description: string;
   FormType: string;
   context:WebPartContext;
+  httpRequest:string;
 }
 
 export default class PromotionResponseWebPart extends BaseClientSideWebPart<IPromotionResponseWebPartProps> {
@@ -31,7 +32,8 @@ export default class PromotionResponseWebPart extends BaseClientSideWebPart<IPro
       const element: React.ReactElement<IPromotionResponseProps> = React.createElement(
         PromotionResponseNew,
         {          
-          context: this.context
+          context: this.context,
+          httpRequest:this.properties.httpRequest
         }
       );
 
@@ -41,7 +43,8 @@ export default class PromotionResponseWebPart extends BaseClientSideWebPart<IPro
       const element: React.ReactElement<IPromotionResponseProps> = React.createElement(
         PromotionResponseEdit,
         {
-          context: this.context
+          context: this.context,
+          httpRequest:this.properties.httpRequest
         }
       );
 
@@ -51,7 +54,8 @@ export default class PromotionResponseWebPart extends BaseClientSideWebPart<IPro
       const element: React.ReactElement<IPromotionResponseProps> = React.createElement(
         PromotionResponse,
         {
-          context: this.context
+          context: this.context,
+          httpRequest:this.properties.httpRequest
         }
       );
 
@@ -88,6 +92,9 @@ export default class PromotionResponseWebPart extends BaseClientSideWebPart<IPro
                     { key: 'Edit', text: 'Edit' },
                     { key: 'view', text: 'View' }
                   ]
+                }),
+                PropertyPaneTextField('httpRequest', {
+                  label: "httpRequest"
                 })
 
               ]

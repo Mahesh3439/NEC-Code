@@ -73,7 +73,7 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
                 });
             }).then(() => {
 
-                const url: string = `${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/getbytitle('Approvals Master')/items?$select=*,Agency/Title&$expand=Agency`;
+                const url: string = `${this.props.context.pageContext.site.absoluteUrl}/_api/web/lists/getbytitle('Approvals Master')/items?$select=*,Agency/Title,Agency/ShortName&$expand=Agency`;
                 this.listFormService._getListitems(this.props.context, url)
                     .then((resp) => {
                         let data = resp.value;
@@ -165,7 +165,7 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
                         InvestorId: this.state.pjtItem.InvestorId,
                         LiasonOfficerId: this.state.pjtItem.LiaisonOfficerId,
                         ApprovalOrder: `${item.ApprovalOrder}`,
-                        ApprovalShortName: `${item.ApprovalShortName}`,
+                        ApprovalShortName: `${item.Agency.ShortName}`,
                         ApprovalID: item.Id.toString()
                     },
                     entityTypeFullName).then(b => {
@@ -234,20 +234,21 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
             ApprovalsId: {
                 results: this.items
             }
-        }).then(i => {
+        }).then(async i => {
             console.log(i);
-            this._submitData();
+           await this._submitData();
             if (this.delteItems.length > 0) {
-                this._deleteItems();
+                await this._deleteItems();
             }
         });
     }
 
-    private _deleteItems() {
+    private async _deleteItems() {
+        let web = new Web(`${this.props.context.pageContext.web.absoluteUrl}`);
         for (let dItem of this.delteItems) {
-            sp.web.lists.getByTitle("Approvals").items.top(1).filter(`ApprovalID eq '${dItem}'`).get().then((items: any[]) => {
+            await web.lists.getByTitle("Approvals").items.top(1).filter(`ApprovalID eq '${dItem}'`).get().then(async (items: any[]) => {
                 if (items.length > 0) {
-                    sp.web.lists.getByTitle("Approvals").items.getById(items[0].Id).delete().then(_ => { });
+                   await web.lists.getByTitle("Approvals").items.getById(items[0].Id).delete().then(_ => { });
                 }
             });
         }

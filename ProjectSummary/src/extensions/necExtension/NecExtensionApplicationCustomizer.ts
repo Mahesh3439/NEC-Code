@@ -51,47 +51,52 @@ export default class NecExtensionApplicationCustomizer
 
 
     SPComponentLoader.loadCss(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/GlobalCSS.css`);
-    
+
     SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
       globalExportsName: 'jQuery'
-  }).catch((error) => {
+    }).catch((error) => {
 
-  }).then((): Promise<{}> => {
-      return SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.MultiFile.js`, {
-          globalExportsName: 'jQuery'
+    }).then(() => {
+      SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.MultiFile.js`, {
+        globalExportsName: 'jQuery'
       });
-  }).catch((error) => {
+      SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/NavContol.js`, {
+        globalExportsName: 'getUserGroups'
+      });
 
-  });
+
+    }).catch((error) => {
+
+    });
     Log.info(LOG_SOURCE, `Initialized ${strings.Title}`);
 
-    const cssUrl: string = `${this.context.pageContext.site.absoluteUrl}/SiteAssets/CustomCSS.css`;
-    const JqueryUrl: string = `${this.context.pageContext.site.absoluteUrl}/SiteAssets/Jquery.js`;
-    const JSUrl: string = `${this.context.pageContext.site.absoluteUrl}/SiteAssets/NavContol.js`;
-    if (cssUrl) {
-      // inject the style sheet
-      const head: any = document.getElementsByTagName("head")[0] || document.documentElement;
-      let customStyle: HTMLLinkElement = document.createElement("link");
-      customStyle.href = cssUrl;
-      customStyle.rel = "stylesheet";
-      customStyle.type = "text/css";
-      head.insertAdjacentElement("beforeEnd", customStyle);
-    }
-    if (JqueryUrl) {
-      const head: any = document.getElementsByTagName("head")[0] || document.documentElement;
-      let customJquery: HTMLScriptElement = document.createElement("script");
-      customJquery.src = JqueryUrl;
-      customJquery.type = "text/javascript";
-      head.insertAdjacentElement("beforeEnd", customJquery);
+    // const cssUrl: string = `${this.context.pageContext.site.absoluteUrl}/SiteAssets/CustomCSS.css`;
+    // const JqueryUrl: string = `${this.context.pageContext.site.absoluteUrl}/SiteAssets/Jquery.js`;
+    // const JSUrl: string = `${this.context.pageContext.site.absoluteUrl}/SiteAssets/NavContol.js`;
+    // if (cssUrl) {
+    //   // inject the style sheet
+    //   const head: any = document.getElementsByTagName("head")[0] || document.documentElement;
+    //   let customStyle: HTMLLinkElement = document.createElement("link");
+    //   customStyle.href = cssUrl;
+    //   customStyle.rel = "stylesheet";
+    //   customStyle.type = "text/css";
+    //   head.insertAdjacentElement("beforeEnd", customStyle);
+    // }
+    // if (JqueryUrl) {
+    //   const head: any = document.getElementsByTagName("head")[0] || document.documentElement;
+    //   let customJquery: HTMLScriptElement = document.createElement("script");
+    //   customJquery.src = JqueryUrl;
+    //   customJquery.type = "text/javascript";
+    //   head.insertAdjacentElement("beforeEnd", customJquery);
 
-    }
-    if (JSUrl) {
-      const head: any = document.getElementsByTagName("head")[0] || document.documentElement;
-      let customJS: HTMLScriptElement = document.createElement("script");
-      customJS.src = JSUrl;
-      customJS.type = "text/javascript";
-      head.insertAdjacentElement("beforeEnd", customJS);
-    }
+    // }
+    // if (JSUrl) {
+    //   const head: any = document.getElementsByTagName("head")[0] || document.documentElement;
+    //   let customJS: HTMLScriptElement = document.createElement("script");
+    //   customJS.src = JSUrl;
+    //   customJS.type = "text/javascript";
+    //   head.insertAdjacentElement("beforeEnd", customJS);
+    // }
 
     this.context.placeholderProvider.changedEvent.add(this, () => {
       this._renderPlaceHolders();
@@ -145,7 +150,7 @@ export default class NecExtensionApplicationCustomizer
           // this.LoadSiteBreadcrumb(this);
 
           //this._UpdateProfile();
-         
+
         }
       }
     }
@@ -211,26 +216,26 @@ export default class NecExtensionApplicationCustomizer
     //     });
   }
 
-  private _UpdateProfile():void{
+  private _UpdateProfile(): void {
 
     //WorkEmail
 
     //let loginName = `${this.context.pageContext.user.loginName}`;
     let loginName = "i:0#.f|membership|s.agency@ttengage.tt";
 
-      // sp.profiles.myProperties.get().then(function(result) {
-      //   var props = result.UserProfileProperties;
-      //   var propValue = "";
-      //   props.forEach(function(prop) {
-      //   propValue += prop.Key + " - " + prop.Value + "<br/>";
-      //   });
-      //   console.log(propValue);
-      //   }).catch(function(err) {
-      //   console.log("Error: " + err);
-      //   });
+    // sp.profiles.myProperties.get().then(function(result) {
+    //   var props = result.UserProfileProperties;
+    //   var propValue = "";
+    //   props.forEach(function(prop) {
+    //   propValue += prop.Key + " - " + prop.Value + "<br/>";
+    //   });
+    //   console.log(propValue);
+    //   }).catch(function(err) {
+    //   console.log("Error: " + err);
+    //   });
 
-      sp.profiles.getUserProfilePropertyFor(loginName,"WorkEmail")
-      .then((prop:string)=>{
+    sp.profiles.getUserProfilePropertyFor(loginName, "WorkEmail")
+      .then((prop: string) => {
         console.log(prop);
       })
   }

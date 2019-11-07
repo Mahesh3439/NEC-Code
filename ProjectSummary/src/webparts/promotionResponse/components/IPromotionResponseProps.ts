@@ -2,6 +2,7 @@ import { WebPartContext } from "@microsoft/sp-webpart-base";
 
 export interface IPromotionResponseProps { 
   context:WebPartContext;
+  httpRequest:string;
 }
 
 export interface IPromotionResponseState {

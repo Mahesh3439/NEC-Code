@@ -251,7 +251,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
         }
         catch (error) {
             this.errorLog = {
-                component: "Project Summary Submittion",
+                component: "Promotion intrest Submittion",
                 page: window.location.href,
                 Module: "Data Save",
                 exception: error

@@ -21,8 +21,7 @@
     "description": { "default": "Custom form to submit a Project Summary" },
     "officeFabricIconFontName": "Page",
     "properties": {
-      "description": "Project Summary"
-      
+      "description": "Project Summary"      
     }
   }]
 }

@@ -1,10 +1,11 @@
 import { SPHttpClient, SPHttpClientResponse, ISPHttpClientOptions } from '@microsoft/sp-http';
-import { IListFormService } from './ICommonMethods';
+import { IListFormService, IcreateSpace } from './ICommonMethods';
 import { IProjectSpace } from '../../webparts/projectSummary/components/IProjectSummaryProps';
 import { WebPartContext } from '@microsoft/sp-webpart-base';
 import { IListItem } from '../../webparts/projectSummary/components/IProjectSummaryProps';
 import { IErrorLog } from '../../webparts/projectSummary/components/IProjectSummarySubmitProps';
 import { sp, Web, WebAddResult } from "@pnp/sp";
+
 
 
 
@@ -113,32 +114,33 @@ export class ListFormService implements IListFormService {
    * @webtemplate: {8CF9E84A-CD4E-4C2C-847E-2EB55655D939}#ProjectSpace
    */
 
-  public async _creatProjectSpace(context: WebPartContext, siteTitle: string, siteURL: string, investor: number) {
-    let Api = `${context.pageContext.web.absoluteUrl}/_api/web/GetAvailableWebTemplates(lcid=1033)?$filter=Title eq 'ProjectSpace'`;
-    return context.spHttpClient.get(Api, SPHttpClient.configurations.v1)
+  public async _creatProjectSpace(crtSpace: IcreateSpace) {
+    let Api = `${crtSpace.context.pageContext.web.absoluteUrl}/_api/web/GetAvailableWebTemplates(lcid=1033)?$filter=Title eq 'ProjectSpace'`;
+    return crtSpace.context.spHttpClient.get(Api, SPHttpClient.configurations.v1)
       .then(resp => { return resp.json(); })
       .then(async (response) => {
         let items = response.value[0];
         let templateName = items.Name;
-        const postURL: string = `${context.pageContext.web.absoluteUrl}/_api/web/webinfos/add`;
+        const postURL: string = `${crtSpace.context.pageContext.web.absoluteUrl}/_api/web/webinfos/add`;
         const spOpts: ISPHttpClientOptions = {
           body: `{
           "parameters":{
                 "@odata.type": "#SP.WebInfoCreationInformation",
-                "Title": "${siteTitle}", 
-                "Url": "${siteURL}",
-                "Description": "Projectspace",
+                "Title": "${crtSpace.Title}", 
+                "Url": "${crtSpace.url}",
+                "Description": "${crtSpace.Description}",
                 "Language": 1033,
                 "WebTemplate": "${templateName}",
                 "UseUniquePermissions": true
               }
           }`
         };
-        return await context.spHttpClient.post(postURL, SPHttpClient.configurations.v1, spOpts)
+        return await crtSpace.context.spHttpClient.post(postURL, SPHttpClient.configurations.v1, spOpts)
           .then((response: SPHttpClientResponse) => {
             return response.json();
           }).then(async res => {
-            await this._assigneUser(res.ServerRelativeUrl, investor);
+            await this._assigneUser(res.ServerRelativeUrl, crtSpace.investorId);
+            await this._assigneLicence(res.ServerRelativeUrl,crtSpace.httpReuest,crtSpace.investorEmail);
             return res;
           });
       });
@@ -154,6 +156,7 @@ export class ListFormService implements IListFormService {
        * roleDefId -- 1073741830 -- Edit
        * roleDefId -- 1073741827 -- Contribute
        */
+
   public async _assigneUser(siteURL: string, investor: number) {
     let webURL = `https://ttengage.sharepoint.com${siteURL}`;
 
@@ -161,7 +164,7 @@ export class ListFormService implements IListFormService {
 
     //Assigning existing groups to Project Space
     web.roleAssignments.add(26, 1073741829);
-    web.roleAssignments.add(25, 1073741829);
+    web.roleAssignments.add(25, 1073741827);
     //Assigning access to the Investor with contribute rights.
     //UserId and roleDefId
     web.roleAssignments.add(investor, 1073741827);
@@ -179,7 +182,7 @@ export class ListFormService implements IListFormService {
       await page.breakRoleInheritance(false);
       await page.roleAssignments.add(24, 1073741827);
       await page.roleAssignments.add(25, 1073741829);
-      await page.roleAssignments.add(26, 1073741829);
+      await page.roleAssignments.add(26, 1073741827);
       await page.roleAssignments.add(investor, 1073741827);
 
     }
@@ -190,17 +193,54 @@ export class ListFormService implements IListFormService {
     await Approvals.breakRoleInheritance(false);
     Approvals.roleAssignments.add(24, 1073741827);
     Approvals.roleAssignments.add(25, 1073741829);
-    Approvals.roleAssignments.add(26, 1073741829);
+    Approvals.roleAssignments.add(26, 1073741827);
     Approvals.roleAssignments.add(investor, 1073741827);
 
     await issues.breakRoleInheritance(false);
     issues.roleAssignments.add(24, 1073741827);
     issues.roleAssignments.add(25, 1073741829);
-    issues.roleAssignments.add(26, 1073741829);
+    issues.roleAssignments.add(26, 1073741827);
     issues.roleAssignments.add(investor, 1073741827);
 
 
   }
+
+  /**
+   * 
+   * @param siteURL to send site url to capture the error log
+   * @param flowURL httpRequest URL to tigger MS Flow for assigning the licience 
+   * @param investorEmail Investor email id to assigne c\licience
+   */
+
+  public async _assigneLicence(siteURL: string, flowURL: string, investorEmail: string) {
+    let postData: any = {
+      "UserEmailId": investorEmail
+    };
+    await fetch(flowURL, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(postData)
+    }).then((response) => {
+      //alert("flow is triggered for add licence");
+
+    }).catch((error) => {
+      let errorLog: IErrorLog = {
+        Module: "User licience",
+        component: "Common Method",
+        page: "",
+        exception: error.toString()
+      }
+      this._logError(siteURL,errorLog);
+
+    });
+
+
+
+  }
+
 
   public async _logError(siteURL: string, errorLog: IErrorLog) {
 

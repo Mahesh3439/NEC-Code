@@ -12,8 +12,18 @@ export interface IListFormService {
     _getListItem(contet: WebPartContext, apiURL:string);
     _getloginusergroups(context: WebPartContext);
     _getListItem_etag(contet: WebPartContext, listTitle:string,ItemId: number);
-    _creatProjectSpace(conte:WebPartContext,siteTitle:string,siteURL:string,investor:number);
+    _creatProjectSpace(crtSite:IcreateSpace);
     _assigneUser(siteURL:string,investor:number);
     _logError(siteURL:string,erroLog:IErrorLog);
 
+}
+
+export interface IcreateSpace{
+    Title?:string;
+    Description?:string;
+    url?:string;
+    investorId?:number;
+    investorEmail?:string;
+    httpReuest?:string;
+    context?:WebPartContext;
 }

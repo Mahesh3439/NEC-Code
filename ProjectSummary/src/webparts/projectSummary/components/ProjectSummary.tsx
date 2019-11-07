@@ -391,15 +391,15 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
     let vsiteTitle = this.state.items.Title;
     let vsiteDesp = this.state.items.ProjectDescription;
 
-    this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl,1)
-      .then((responseJSON) => {
-        this.fields.push("ProjectURL");
-        this.setState({
-          hideDialog: true,
-          pjtSpace: responseJSON.ServerRelativeUrl
+    // this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl,1)
+    //   .then((responseJSON) => {
+    //     this.fields.push("ProjectURL");
+    //     this.setState({
+    //       hideDialog: true,
+    //       pjtSpace: responseJSON.ServerRelativeUrl
 
-        });
-      });
+    //     });
+    //   });
   }
 
 

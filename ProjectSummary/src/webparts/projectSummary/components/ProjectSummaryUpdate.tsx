@@ -21,7 +21,7 @@ import {
     IDropdownOption
 } from "office-ui-fabric-react/lib/Dropdown";
 import { ListFormService } from '../../../Commonfiles/Services/CommonMethods';
-import { IListFormService } from '../../../Commonfiles/Services/ICommonMethods';
+import { IListFormService,IcreateSpace } from '../../../Commonfiles/Services/ICommonMethods';
 //import '../../../Commonfiles/Services/customStyles.css';
 import '../../../Commonfiles/Services/Custom.css';
 import { ListItemAttachments } from '@pnp/spfx-controls-react/lib/ListItemAttachments';
@@ -55,6 +55,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
     public isActivityChanged: boolean = false;
     public PjtStatus: string;
     public errorLog: IErrorLog = {};
+    public crtSpace: IcreateSpace = {};
 
 
 
@@ -92,9 +93,10 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
         this._getProjectActions();
 
         if (this.ItemId) {
-            const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Projects')/items(${this.ItemId})?$select=*,LiaisonOfficer/Id,LiaisonOfficer/EMail&$expand=LiaisonOfficer`;
+            const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Projects')/items(${this.ItemId})?$select=*,LiaisonOfficer/Id,LiaisonOfficer/EMail,Investor/EMail&$expand=LiaisonOfficer,Investor`;
             this.listFormService._getListItem(this.props.context, restApi)
                 .then((response) => {
+                    this.crtSpace.investorEmail = response.Investor.EMail;
                     this.setState({
                         items: response,
                         disabled: true,
@@ -306,7 +308,17 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
         let vsiteTitle = this.state.items.Title;
         let vsiteDesp = this.state.items.ProjectDescription;
 
-        this.listFormService._creatProjectSpace(this.props.context, vsiteTitle, vsiteurl,this.state.items.InvestorId)
+        this.crtSpace = {
+            Title:this.state.items.Title,
+            url:vsiteurl,
+            Description:this.state.items.ProjectDescription,
+            investorId:this.state.items.InvestorId,            
+            context:this.props.context,
+            httpReuest:this.props.httpRequest
+
+        }
+
+        this.listFormService._creatProjectSpace(this.crtSpace)
             .then((responseJSON) => {
                 this.fields.push("ProjectURL");
                 this.setState({

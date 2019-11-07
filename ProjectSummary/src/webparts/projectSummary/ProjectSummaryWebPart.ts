@@ -27,7 +27,7 @@ export interface IProjectSummaryWebPartProps {
   description: string;
   FormType: string;
   context: WebPartContext;
- 
+  httpRequest: string; 
 }
 
 export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjectSummaryWebPartProps> {
@@ -42,7 +42,8 @@ export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjec
         const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
           ProjectSummarySubmit,
           {          
-            context: this.context
+            context: this.context,
+            httpRequest:this.properties.httpRequest
           }
         );
   
@@ -52,7 +53,8 @@ export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjec
         const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
           ProjectSummaryUpdate,
           {
-            context: this.context
+            context: this.context,
+            httpRequest:this.properties.httpRequest
           }
         );
   
@@ -62,7 +64,8 @@ export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjec
         const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
           ProjectSpace,
           {
-            context: this.context
+            context: this.context,
+            httpRequest:this.properties.httpRequest
           }
         );
   
@@ -72,7 +75,8 @@ export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjec
         const element: React.ReactElement<IProjectSummaryProps> = React.createElement(
           SummaryDetails,
           {
-            context: this.context
+            context: this.context,
+            httpRequest:this.properties.httpRequest
           }
         );
   
@@ -123,6 +127,9 @@ export default class ProjectSummaryWebPart extends BaseClientSideWebPart<IProjec
                     // { key: 'Approvals', text: 'Approvals' }
                    
                   ]
+                }),
+                PropertyPaneTextField('httpRequest', {
+                  label: "httpRequest"
                 })
               ]
             }
