@@ -45,11 +45,7 @@ export default class NecExtensionApplicationCustomizer
 
   @override
   public onInit(): Promise<void> {
-    // sp.setup({
-    //   spfxContext: this.context
-    // });
-
-
+    
     SPComponentLoader.loadCss(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/GlobalCSS.css`);
 
     SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
@@ -63,41 +59,10 @@ export default class NecExtensionApplicationCustomizer
       SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/NavContol.js`, {
         globalExportsName: 'getUserGroups'
       });
-
-
     }).catch((error) => {
 
     });
     Log.info(LOG_SOURCE, `Initialized ${strings.Title}`);
-
-    // const cssUrl: string = `${this.context.pageContext.site.absoluteUrl}/SiteAssets/CustomCSS.css`;
-    // const JqueryUrl: string = `${this.context.pageContext.site.absoluteUrl}/SiteAssets/Jquery.js`;
-    // const JSUrl: string = `${this.context.pageContext.site.absoluteUrl}/SiteAssets/NavContol.js`;
-    // if (cssUrl) {
-    //   // inject the style sheet
-    //   const head: any = document.getElementsByTagName("head")[0] || document.documentElement;
-    //   let customStyle: HTMLLinkElement = document.createElement("link");
-    //   customStyle.href = cssUrl;
-    //   customStyle.rel = "stylesheet";
-    //   customStyle.type = "text/css";
-    //   head.insertAdjacentElement("beforeEnd", customStyle);
-    // }
-    // if (JqueryUrl) {
-    //   const head: any = document.getElementsByTagName("head")[0] || document.documentElement;
-    //   let customJquery: HTMLScriptElement = document.createElement("script");
-    //   customJquery.src = JqueryUrl;
-    //   customJquery.type = "text/javascript";
-    //   head.insertAdjacentElement("beforeEnd", customJquery);
-
-    // }
-    // if (JSUrl) {
-    //   const head: any = document.getElementsByTagName("head")[0] || document.documentElement;
-    //   let customJS: HTMLScriptElement = document.createElement("script");
-    //   customJS.src = JSUrl;
-    //   customJS.type = "text/javascript";
-    //   head.insertAdjacentElement("beforeEnd", customJS);
-    // }
-
     this.context.placeholderProvider.changedEvent.add(this, () => {
       this._renderPlaceHolders();
     });
@@ -121,8 +86,7 @@ export default class NecExtensionApplicationCustomizer
         console.error('The expected placeholder (Top) was not found.');
         return;
       }
-      // <input id="btnTranslate" type="button" value="Translate" onClick="Translate()" />
-      //<div id="google_translate_element" class=""></div>  
+     
       if (this.properties) {
         if (this._headerPlaceholder.domElement) {
           this._headerPlaceholder.domElement.innerHTML = `          
@@ -147,10 +111,7 @@ export default class NecExtensionApplicationCustomizer
          
          </div>
           `;
-          // this.LoadSiteBreadcrumb(this);
-
-          //this._UpdateProfile();
-
+          
         }
       }
     }
@@ -185,59 +146,7 @@ export default class NecExtensionApplicationCustomizer
         }
       }
 
-
-
     }
-  }
-
-
-
-  private _trimSuiteBar(): void {
-
-    sp.web.currentUserHasPermissions(PermissionKind.AddListItems).
-      then(
-        perms => {
-          var suiteBar = document.getElementById("O365_MainLink_Settings");
-          if (!suiteBar || !perms) return;
-          suiteBar.setAttribute("style", "display: block !important");
-
-          console.log(perms);
-        });
-
-
-
-    //   pnp.sp.web.usingCaching()
-    //     .currentUserHasPermissions(PermissionKind.FullMask)
-    //     .then(perms => {
-    //       var suiteBar = document.getElementById("O365_MainLink_Settings");
-    //       if (!suiteBar || !perms) return; //return if no suite bar OR perms not high enough
-
-    //       suiteBar.setAttribute("style", "display: block !important");
-    //     });
-  }
-
-  private _UpdateProfile(): void {
-
-    //WorkEmail
-
-    //let loginName = `${this.context.pageContext.user.loginName}`;
-    let loginName = "i:0#.f|membership|s.agency@ttengage.tt";
-
-    // sp.profiles.myProperties.get().then(function(result) {
-    //   var props = result.UserProfileProperties;
-    //   var propValue = "";
-    //   props.forEach(function(prop) {
-    //   propValue += prop.Key + " - " + prop.Value + "<br/>";
-    //   });
-    //   console.log(propValue);
-    //   }).catch(function(err) {
-    //   console.log("Error: " + err);
-    //   });
-
-    sp.profiles.getUserProfilePropertyFor(loginName, "WorkEmail")
-      .then((prop: string) => {
-        console.log(prop);
-      })
-  }
+  } 
 
 }
