@@ -47,18 +47,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
             spinner:false,
             disable:false
         };
-        SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js', {
-            globalExportsName: 'jQuery'
-        }).catch((error) => {
-
-        }).then((): Promise<{}> => {
-            return SPComponentLoader.loadScript('https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.MultiFile.js', {
-                globalExportsName: 'jQuery'
-            });
-        }).catch((error) => {
-
-        });
-
+        
         this.listFormService = new ListFormService(props.context.spHttpClient);
         this.PItemId = Number(window.location.search.split("PRID=")[1]);
 
@@ -124,9 +113,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
         }
         bodyContent["Title"] = this.state.items.Title;
         bodyContent["PromotionIDId"] = this.PItemId;
-        bodyContent["DeadlineDate"]=this.state.items.DeadlineDate;
-
-        // bodyContent["PromotionType"] = this.state.items.PromotionType;
+       // bodyContent["DeadlineDate"]=this.state.items.DeadlineDate;        
         let body: string = JSON.stringify(bodyContent);
         return body;
     }
@@ -350,11 +337,11 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                         </div>
 
                                         <div className="profile-info-row">
-                                        <div className="profile-info-name">Port Requirements </div>
+                                        <div className="profile-info-name">Port Requirement </div>
                                             <div className="profile-info-value">
                                                 <TextField id="Port" label="" multiline rows={3} className="wd100" underlined onBlur={this.handleChange.bind(this)} />
                                             </div>
-                                            <div className="profile-info-name">Natural Gas Requirements</div>
+                                            <div className="profile-info-name">Natural Gas Usage</div>
                                             <div className="profile-info-value">
                                                 <TextField id="Naturalgas" className="wd100" underlined onBlur={this.handleChange.bind(this)} suffix="mmscf/d" />
                                             </div>                                           
@@ -364,14 +351,14 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                             <div className="profile-info-value">
                                                 <TextField id="WarehousingRequirements" multiline rows={3} className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} />
                                             </div>
-                                            <div className="profile-info-name">Electricity </div>
+                                            <div className="profile-info-name">Electricity Consumption </div>
                                             <div className="profile-info-value">
                                                 <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field wd100" underlined onBlur={this.handleChange.bind(this)} suffix="MW" />
                                                 <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field wd100" underlined onBlur={this.handleChange.bind(this)} suffix="kVA" />
                                             </div>  
                                         </div>
                                         <div className="profile-info-row">
-                                        <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
+                                        <div className="profile-info-name">If Energy Efficient Project, Potential Savings </div>
                                             <div className="profile-info-value">
                                                 <TextField id="PotentialSaving" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} />
                                             </div>

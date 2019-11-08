@@ -386,25 +386,25 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                                 <div className="row">
                                     <div className="profile-user-info profile-user-info-striped">
                                         <div className="profile-info-row">
-                                            <div className="profile-info-name">Products  &amp; Associated Quantity</div>
+                                            <div className="profile-info-name">Products  &amp; Associated Quantities</div>
                                             <div className="profile-info-value">
                                                 <TextField id="Productsandassociatedquantities"
                                                     className="wd100"
                                                     name="Productsandassociatedquantities"
                                                     multiline
                                                     rows={3}
-                                                    placeholder="Products & Associated Quantity"
+                                                    placeholder=""
                                                     underlined
                                                     value={this.state.items.Productsandassociatedquantities}
                                                     readOnly={true} />
                                             </div>
                                             <div className="profile-info-name">Capital Expenditure </div>
                                             <div className="profile-info-value">
-                                                <TextField id="CapitalExpenditure" className="wd100" underlined label="" placeholder="Capital Expenditure" value={this.state.items.CapitalExpenditure} readOnly suffix="US$MM" />
+                                                <TextField id="CapitalExpenditure" className="wd100" underlined label="" placeholder="" value={this.state.items.CapitalExpenditure} readOnly suffix="US$MM" />
                                             </div>
                                         </div>
                                         <div className="profile-info-row">
-                                        <div className="profile-info-name">Port Requirements </div>
+                                        <div className="profile-info-name">Port Requirement </div>
                                             <div className="profile-info-value">
                                                 <TextField id="Port" className="wd100"  multiline rows={3} label="" underlined value={this.state.items.Port} readOnly />
                                             </div>
@@ -419,7 +419,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                                             <div className="profile-info-value">
                                                 <TextField id="WarehousingRequirements" className="wd100" multiline rows={3} label="" underlined value={this.state.items.WarehousingRequirements} readOnly />
                                             </div>
-                                            <div className="profile-info-name">Electricity </div>
+                                            <div className="profile-info-name">Electricity Consumption </div>
                                             <div className="profile-info-value">
                                                 <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field wd100" suffix="MW" underlined value={this.state.items.ElectricityMW} readOnly />
                                                 <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field wd100" suffix="kVA" underlined value={this.state.items.ElectricityKW} readOnly />

@@ -506,11 +506,11 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
                     </div>
 
                     <div className="profile-info-row">
-                      <div className="profile-info-name">Port Requirements </div>
+                      <div className="profile-info-name">Port Requirement </div>
                       <div className="profile-info-value">
                         <TextField id="Port" className="wd100" label="" multiline rows={3} underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.Port} readOnly={this.state.disable} />
                       </div>
-                      <div className="profile-info-name">Natural Gas Requirements</div>
+                      <div className="profile-info-name">Natural Gas Usage</div>
                       <div className="profile-info-value">
                         <TextField id="Naturalgas" suffix="mmscf/d" className="wd100" underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.Naturalgas} readOnly={this.state.disable} />
                       </div>
@@ -521,7 +521,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
                       <div className="profile-info-value">
                         <TextField id="WarehousingRequirements" multiline rows={3} className="wd100" onBlur={this.handleChange.bind(this)} label="" underlined defaultValue={this.state.items.WarehousingRequirements} readOnly={this.state.disable} />
                       </div>
-                      <div className="profile-info-name">Electricity </div>
+                      <div className="profile-info-name">Electricity Consumption </div>
                       <div className="profile-info-value">
                         <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field wd100" onBlur={this.handleChange.bind(this)} suffix="MW" underlined defaultValue={this.state.items.ElectricityMW} readOnly={this.state.disable} />
                         <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field wd100" onBlur={this.handleChange.bind(this)} suffix="kVA" underlined defaultValue={this.state.items.ElectricityKW} readOnly={this.state.disable} />
@@ -529,7 +529,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
                       </div>
                     </div>
                     <div className="profile-info-row">
-                      <div className="profile-info-name">If Energy Efficient Project, Potential Saving </div>
+                      <div className="profile-info-name">If Energy Efficient Project, Potential Savings </div>
                       <div className="profile-info-value">
                         <TextField id="PotentialSaving" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.PotentialSaving} readOnly={this.state.disable} />
                       </div>

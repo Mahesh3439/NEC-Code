@@ -426,7 +426,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                     <div className="profile-info-row">
                                         <div className="profile-info-name">Comments</div>
                                         <div className="profile-info-value">
-                                            <TextField id="Comments" underlined label="" multiline rows={3} onBlur={this.handleChange.bind(this)} />
+                                            <TextField id="Comments" underlined placeholder="Comments" label="" multiline rows={3} onBlur={this.handleChange.bind(this)} />
                                         </div>
                                     </div>
 

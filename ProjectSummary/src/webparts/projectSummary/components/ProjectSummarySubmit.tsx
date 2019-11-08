@@ -66,17 +66,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             defVale: ""
 
         };
-        SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
-            globalExportsName: 'jQuery'
-        }).catch((error) => {
 
-        }).then((): Promise<{}> => {
-            return SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.MultiFile.js`, {
-                globalExportsName: 'jQuery'
-            });
-        }).catch((error) => {
-
-        });
 
         this.listFormService = new ListFormService(props.context.spHttpClient);
         this._getProjectActions();
@@ -92,12 +82,9 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                         return false;
                     }
                 }));
-            });
-
-        setTimeout(function () {
-            CustomJS.load();
-        }, 3000);
-
+            }).then(() => {
+                CustomJS.load();
+            });      
     }
 
     //Method to convert single line text to multy line field in html.
@@ -375,15 +362,15 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
     }
 
     public ProjectSpace() {
-        let vsiteurl = `ProjectSpace${this.ItemId}`;        
+        let vsiteurl = `ProjectSpace${this.ItemId}`;
         this.crtSpace = {
-            Title:this.PjtTitle,
-            url:vsiteurl,
-            Description:this.pjtDesc,
-            investorId:this.investor,
-            investorEmail:$(".ms-Persona-secondaryText")[0].textContent,
-            context:this.props.context,
-            httpReuest:this.props.httpRequest
+            Title: this.PjtTitle,
+            url: vsiteurl,
+            Description: this.pjtDesc,
+            investorId: this.investor,
+            investorEmail: $(".ms-Persona-secondaryText")[0].textContent,
+            context: this.props.context,
+            httpReuest: this.props.httpRequest
 
         }
         this.listFormService._creatProjectSpace(this.crtSpace)
@@ -480,7 +467,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                 <div className="row">
                                     <div className="profile-user-info profile-user-info-striped">
                                         <div className="profile-info-row">
-                                            <div className="profile-info-name">Products  &amp; Associated Quantity <span style={{ color: "red" }}>*</span></div>
+                                            <div className="profile-info-name">Products  &amp; Associated Quantities <span style={{ color: "red" }}>*</span></div>
                                             <div className="profile-info-value">
                                                 <TextField id="Productsandassociatedquantities"
                                                     className="wd100"
@@ -488,7 +475,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                                     multiline
                                                     rows={3}
                                                     underlined
-                                                    placeholder="Products & Associated Quantity"
+                                                    placeholder="Products & Associated Quantities"
                                                     onBlur={this.handleChange.bind(this)}
                                                 />
                                             </div>
@@ -499,7 +486,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                             </div>
                                         </div>
                                         <div className="profile-info-row">
-                                            <div className="profile-info-name">Port Requirements </div>
+                                            <div className="profile-info-name">Port Requirement </div>
                                             <div className="profile-info-value">
                                                 <TextField className="wd100" id="Port" label="" multiline rows={3} underlined onBlur={this.handleChange.bind(this)} />
                                             </div>
@@ -515,7 +502,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                             <div className="profile-info-value">
                                                 <TextField className="wd100" id="WarehousingRequirements" multiline rows={3} label="" underlined onBlur={this.handleChange.bind(this)} />
                                             </div>
-                                            <div className="profile-info-name">Electricity </div>
+                                            <div className="profile-info-name">Electricity Consumption </div>
                                             <div className="profile-info-value">
                                                 <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field" underlined onBlur={this.handleChange.bind(this)} suffix="MW" />
                                                 <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field" underlined onBlur={this.handleChange.bind(this)} suffix="kVA" />
