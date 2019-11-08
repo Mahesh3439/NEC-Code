@@ -7,7 +7,11 @@ import { IErrorLog } from '../../webparts/projectSummary/components/IProjectSumm
 import { sp, Web, WebAddResult } from "@pnp/sp";
 
 
-
+export interface IGroups {
+  IFAdmin?: number,
+  Liaison?:number,
+  Agency?:number
+}
 
 export class ListFormService implements IListFormService {
   private spHttpClient: SPHttpClient;
@@ -15,6 +19,9 @@ export class ListFormService implements IListFormService {
   constructor(spHttpClient: SPHttpClient) {
     this.spHttpClient = spHttpClient;
   }
+
+  public _vSiteGroups:IGroups={};
+  
 
   /**
    * Gets the schema for all relevant fields for a specified SharePoint list form.
@@ -139,8 +146,9 @@ export class ListFormService implements IListFormService {
           .then((response: SPHttpClientResponse) => {
             return response.json();
           }).then(async res => {
-            await this._assigneUser(res.ServerRelativeUrl, crtSpace.investorId);
-            await this._assigneLicence(res.ServerRelativeUrl,crtSpace.httpReuest,crtSpace.investorEmail);
+            await this._getGroups(this._vSiteGroups,crtSpace.context.pageContext.site.absoluteUrl);
+            await this._assigneUser(this._vSiteGroups,res.ServerRelativeUrl, crtSpace.investorId);
+            await this._assigneLicence(res.ServerRelativeUrl, crtSpace.httpReuest, crtSpace.investorEmail);
             return res;
           });
       });
@@ -157,14 +165,18 @@ export class ListFormService implements IListFormService {
        * roleDefId -- 1073741827 -- Contribute
        */
 
-  public async _assigneUser(siteURL: string, investor: number) {
+  public async _assigneUser(_vSiteGroups:IGroups,siteURL: string, investor: number) {
     let webURL = `https://ttengage.sharepoint.com${siteURL}`;
 
     let web = new Web(webURL);
+    let IFAdmin = _vSiteGroups.IFAdmin;
+    let Liaison = _vSiteGroups.Liaison;
+    let Agency = _vSiteGroups.Agency;
+
 
     //Assigning existing groups to Project Space
-    web.roleAssignments.add(26, 1073741829);
-    web.roleAssignments.add(25, 1073741827);
+    web.roleAssignments.add(IFAdmin, 1073741829);
+    web.roleAssignments.add(Liaison, 1073741827);
     //Assigning access to the Investor with contribute rights.
     //UserId and roleDefId
     web.roleAssignments.add(investor, 1073741827);
@@ -180,29 +192,26 @@ export class ListFormService implements IListFormService {
       let getPage = web.getFileByServerRelativeUrl(pageURL);
       let page = await getPage.getItem();
       await page.breakRoleInheritance(false);
-      await page.roleAssignments.add(24, 1073741827);
-      await page.roleAssignments.add(25, 1073741829);
-      await page.roleAssignments.add(26, 1073741827);
+      await page.roleAssignments.add(Agency, 1073741827);
+      await page.roleAssignments.add(Liaison, 1073741829);
+      await page.roleAssignments.add(IFAdmin, 1073741827);
       await page.roleAssignments.add(investor, 1073741827);
-
     }
 
     /**
    * Breaking inheritance and assigning access to IF Admin, investor,liaison and Approval Agencys
    */
     await Approvals.breakRoleInheritance(false);
-    Approvals.roleAssignments.add(24, 1073741827);
-    Approvals.roleAssignments.add(25, 1073741829);
-    Approvals.roleAssignments.add(26, 1073741827);
+    Approvals.roleAssignments.add(Agency, 1073741827);
+    Approvals.roleAssignments.add(Liaison, 1073741829);
+    Approvals.roleAssignments.add(IFAdmin, 1073741827);
     Approvals.roleAssignments.add(investor, 1073741827);
 
     await issues.breakRoleInheritance(false);
-    issues.roleAssignments.add(24, 1073741827);
-    issues.roleAssignments.add(25, 1073741829);
-    issues.roleAssignments.add(26, 1073741827);
+    issues.roleAssignments.add(Agency, 1073741827);
+    issues.roleAssignments.add(Liaison, 1073741829);
+    issues.roleAssignments.add(IFAdmin, 1073741827);
     issues.roleAssignments.add(investor, 1073741827);
-
-
   }
 
   /**
@@ -233,17 +242,13 @@ export class ListFormService implements IListFormService {
         page: "",
         exception: error.toString()
       }
-      this._logError(siteURL,errorLog);
+      this._logError(siteURL, errorLog);
 
     });
-
-
-
   }
 
 
   public async _logError(siteURL: string, errorLog: IErrorLog) {
-
     let web = new Web(siteURL);
     await web.lists.getByTitle("Exception Log").items.add({
       Title: errorLog.component,
@@ -252,4 +257,28 @@ export class ListFormService implements IListFormService {
       Exception: errorLog.exception.toString()
     });
   }
+
+
+  public async _getGroups(_vSiteGroups:IGroups,webURL:string)
+  {
+    let web = new Web(webURL);
+    await web.siteGroups.get().then(function(data) {    
+      for (let group of data) {
+        if(group.Title == "IF Admin")
+        {
+          _vSiteGroups.IFAdmin = group.Id;
+        }
+        else if(group.Title == "Liaison Officer")
+        {
+          _vSiteGroups.Liaison = group.Id;
+        }
+        else if(group.Title == "Approval Agencies")
+        {
+          _vSiteGroups.Agency = group.Id;
+        }         
+      }     
+  });
+
+  }
+
 }

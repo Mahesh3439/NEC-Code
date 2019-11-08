@@ -13,7 +13,7 @@ export interface IListFormService {
     _getloginusergroups(context: WebPartContext);
     _getListItem_etag(contet: WebPartContext, listTitle:string,ItemId: number);
     _creatProjectSpace(crtSite:IcreateSpace);
-    _assigneUser(siteURL:string,investor:number);
+ //   _assigneUser(siteURL:string,investor:number);
     _logError(siteURL:string,erroLog:IErrorLog);
 
 }
