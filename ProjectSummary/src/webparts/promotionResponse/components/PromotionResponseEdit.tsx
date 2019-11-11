@@ -480,7 +480,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
             <div className="widget-subheader" style={{ background: "#fbaf33", color: "#fff", width: "95%", margin: "0 auto", padding: "1px" }}>
               <h4 className="widget-title lighter smaller" style={{ margin: "5px" }}>Project Specifications</h4>
             </div>
-            <div className="widget-body" style={{ width: "95%", margin: "0 auto" }}>
+            <div className="widget-body widget-Specifications" style={{ width: "95%", margin: "0 auto" }}>
               <div className="widget-main " style={{ padding: "0 0px 8px 0px" }}>
                 <div className="row">
                   <div className="profile-user-info profile-user-info-striped">
@@ -554,6 +554,18 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
               </div>
             </div>
           </div>
+
+          
+          {(this.state.listID && this.state.ItemId) ? (
+            <div className={styles.row}>
+              <ListItemAttachments listId={this.state.listID}
+                itemId={this.state.ItemId}
+                context={this.props.context}
+                disabled={this.state.disable} />
+            </div>) : (
+              <div></div>
+            )
+          }
 
           <div className="widget-Actions" style={((this.state.isAdmin) || this.prmStatus) ? {} : { display: 'none' }}>
             <div className="widget-body">
@@ -637,16 +649,6 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
             </div>
           </div>
 
-          {(this.state.listID && this.state.ItemId) ? (
-            <div className={styles.row}>
-              <ListItemAttachments listId={this.state.listID}
-                itemId={this.state.ItemId}
-                context={this.props.context}
-                disabled={this.state.disable} />
-            </div>) : (
-              <div></div>
-            )
-          }
 
           <div className={styles.pullright}>
             <PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()} style={((this.state.isAdmin && !this.prmStatus) || (!this.state.disable)) ? {} : { display: 'none' }}></PrimaryButton>

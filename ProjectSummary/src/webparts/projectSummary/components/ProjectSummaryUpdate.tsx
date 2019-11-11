@@ -381,7 +381,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                         <div className="widget-subheader" style={{ background: "#fbaf33", color: "#fff", width: "95%", margin: "0 auto", padding: "1px" }}>
                             <h4 className="widget-title lighter smaller" style={{ margin: "5px" }}>Project Specifications</h4>
                         </div>
-                        <div className="widget-body" style={{ width: "95%", margin: "0 auto" }}>
+                        <div className="widget-body widget-Specifications" style={{ width: "95%", margin: "0 auto" }}>
                             <div className="widget-main " style={{ padding: "0 0px 8px 0px" }}>
                                 <div className="row">
                                     <div className="profile-user-info profile-user-info-striped">
@@ -456,6 +456,17 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
 
                     </div>
 
+                    {(this.state.listID && this.state.ItemId) ? (
+                        <div className={styles.row}>
+                            <ListItemAttachments listId={this.state.listID}
+                                itemId={this.state.ItemId}
+                                context={this.props.context}
+                                disabled={false} />
+                        </div>) : (
+                            <div></div>
+                        )
+                    }
+
                     <div className="widget-Actions" style={(this.state.isAdmin || this.state.items.ActionTakenId) ? {} : { display: 'none' }}>
                         <div className="widget-body">
                             <div className="widget-main padding-8">
@@ -493,6 +504,13 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                                             </div>
                                         </div>
                                         <div className="profile-info-row">
+                                            <div className="profile-info-name">Latest Comments</div>
+                                            <div className="profile-info-value">
+                                                <TextField id="Comments" label="" readOnly multiline rows={3} onBlur={this.handleChange.bind(this)} disabled={this.state.isAdmin ? false : true} value={this.state.items.Comments}/>
+                                            </div>
+                                        </div>
+
+                                        <div className="profile-info-row">
                                             <div className="profile-info-name">Comments</div>
                                             <div className="profile-info-value">
                                                 <TextField id="Comments" label="" underlined multiline rows={3} onBlur={this.handleChange.bind(this)} disabled={this.state.isAdmin ? false : true} value={this.state.items.Comments}/>
@@ -505,16 +523,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                         </div>
                     </div>
 
-                    {(this.state.listID && this.state.ItemId) ? (
-                        <div className={styles.row}>
-                            <ListItemAttachments listId={this.state.listID}
-                                itemId={this.state.ItemId}
-                                context={this.props.context}
-                                disabled={false} />
-                        </div>) : (
-                            <div></div>
-                        )
-                    }
+                  
 
                     <div className={styles.pullright}>
 

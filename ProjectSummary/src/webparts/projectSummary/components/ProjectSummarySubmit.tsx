@@ -347,6 +347,15 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             return false;
         }
 
+        if(this.state.isAdmin)
+        {
+            if(this.props.context.pageContext.user.email == $(".ms-Persona-secondaryText")[0].textContent)
+            {
+                alert("Admin can't be an Investor, please select correct investor");
+                return false;
+            }
+        }
+
         this.SaveData()
             .then((resp) => {
                 this.ItemId = resp.Id;
@@ -409,7 +418,6 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
     public render(): React.ReactElement<IProjectSummarySubmitProps> {
         return (
             <div className={styles.projectSummary}>
-
                 <div className="widget-box widget-color-blue2">
                     <div className="widget-header">
                         <h4 className="widget-title lighter smaller">Submit Project Summary </h4>
@@ -452,8 +460,6 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                                     isMonthPickerVisible={false} />
                                             </div>
                                         </div>
-
-
                                     </div>
                                 </div>
                             </div>
@@ -462,7 +468,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                         <div className="widget-subheader" style={{ background: "#fbaf33", color: "#fff", width: "95%", margin: "0 auto", padding: "1px" }}>
                             <h4 className="widget-title lighter smaller" style={{ margin: "5px" }}>Project Specifications</h4>
                         </div>
-                        <div className="widget-body" style={{ width: "95%", margin: "0 auto" }}>
+                        <div className="widget-body widget-Specifications" style={{ width: "95%", margin: "0 auto" }}>
                             <div className="widget-main " style={{ padding: "0 0px 8px 0px" }}>
                                 <div className="row">
                                     <div className="profile-user-info profile-user-info-striped">
@@ -494,8 +500,6 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                             <div className="profile-info-value">
                                                 <TextField className="wd100" id="Naturalgas" underlined onBlur={this.handleChange.bind(this)} suffix="mmscf/d" />
                                             </div>
-
-
                                         </div>
                                         <div className="profile-info-row">
                                             <div className="profile-info-name">Warehousing Requirements </div>
@@ -518,15 +522,12 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                             <div className="profile-info-value">
                                                 <TextField className="wd100" id="Water" label="" underlined onBlur={this.handleChange.bind(this)} suffix="m³/month" />
                                             </div>
-
                                         </div>
                                         <div className="profile-info-row">
-
                                             <div className="profile-info-name">Other </div>
                                             <div className="profile-info-value">
                                                 <TextField className="wd100" id="Other" multiline rows={3} label="" underlined onBlur={this.handleChange.bind(this)} />
                                             </div>
-
                                             <div className="profile-info-name">Land Requirements </div>
                                             <div className="profile-info-value">
                                                 <TextField className="wd100" id="Land" label="" underlined onBlur={this.handleChange.bind(this)} suffix="hectares" />
@@ -628,8 +629,8 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 </div>
 
                 <div className={styles.pullright}>
-                    <PrimaryButton title="Clear" text="Clear" allowDisabledFocus onClick={() => this._buttonClear()}></PrimaryButton>
-                    &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
+                    <PrimaryButton title="Clear" text="Clear" allowDisabledFocus onClick={() => window.location.reload()}></PrimaryButton>
+                    &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() =>  this._submitform()}></PrimaryButton>
                     &nbsp;&nbsp;<PrimaryButton title="Close" text="Close" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
                 </div>
 

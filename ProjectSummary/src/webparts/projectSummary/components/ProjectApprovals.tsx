@@ -266,8 +266,8 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
         var itemIndex: number = -1;
         return (
             <div id="ApprovalsList" className={styles.projectSummary} >
-                <div className={styles.header}>
-                    <h4 className={styles.title}>PROJECT SUMMARY APPROVALS</h4>
+                <div className="widget-header">
+                    <h4 className="widget-title lighter smaller"> PROJECT SUMMARY APPROVALS</h4>
                 </div>
                 <div id='reactForm' className={styles.body}>
                     {this.Category.map((value, index) => {

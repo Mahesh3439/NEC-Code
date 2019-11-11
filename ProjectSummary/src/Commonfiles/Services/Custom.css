@@ -1,17 +1,12 @@
 @media only screen and (min-width: 769px) {
-  
-.profile-info-name {
-  text-align: right;
-  padding: 6px 10px 6px 4px;
-  font-weight: 400;
-  color: #667e99;
-  background-color: transparent;
-  width: 20% !important;
-  vertical-align: middle;
+  .widget-Summary .profile-info-name,
+  .widget-Actions .profile-info-name,
+  .widget-Specifications .profile-info-name {
+  width:25% !important;
+  ;
 }
    
 }
-
 
 input:read-only,
 textarea:read-only
@@ -25,7 +20,33 @@ textarea:read-only
   display: block !important;
 }
 
-h4{
+/* h4{
   margin: 5px 0px;
   font-size: 18px;
+} */
+.right .profile-info-row
+{
+  display: block !important;
+}
+
+.widget-Summary,.widget-Specifications, .widget-Actions {
+  border: 1px solid #dcebf7;
+  margin: 4px;
+}
+
+.widget-Summary .profile-user-info-striped, 
+.widget-Actions .profile-user-info-striped {
+  border: none !important;  
+}
+
+@media only screen and (min-width: 769px) {
+  .left {
+    width: 75%;
+    float: left;
+  }
+  .right {
+    width: 25%;
+    background-color: #f8fafc;
+    float: left;
+  }
 }

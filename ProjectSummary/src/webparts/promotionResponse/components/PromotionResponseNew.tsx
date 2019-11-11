@@ -311,7 +311,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                         <div className="widget-subheader" style={{ background: "#fbaf33", color: "#fff", width: "95%", margin: "0 auto", padding: "1px" }}>
                             <h4 className="widget-title lighter smaller" style={{ margin: "5px" }}>Project Specifications</h4>
                         </div>
-                        <div className="widget-body" style={{ width: "95%", margin: "0 auto" }}>
+                        <div className="widget-body widget-Specifications" style={{ width: "95%", margin: "0 auto" }}>
                             <div className="widget-main " style={{ padding: "0 0px 8px 0px" }}>
                                 <div className="row">
                                     <div className="profile-user-info profile-user-info-striped">
@@ -399,7 +399,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
 
 
                     <div className={styles.pullright}>
-                        <PrimaryButton title="Clear" text="Clear" allowDisabledFocus onClick={() => this._buttonClear()}></PrimaryButton>
+                        <PrimaryButton title="Clear" text="Clear" allowDisabledFocus onClick={() => window.location.reload()}></PrimaryButton>
                         &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
                         &nbsp;&nbsp;<PrimaryButton title="Close" text="Close" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
                     </div>
