@@ -56,6 +56,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
     public PjtStatus: string;
     public errorLog: IErrorLog = {};
     public crtSpace: IcreateSpace = {};
+    public investorEmail:string=null;
 
 
 
@@ -96,7 +97,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
             const restApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Projects')/items(${this.ItemId})?$select=*,LiaisonOfficer/Id,LiaisonOfficer/EMail,Investor/EMail&$expand=LiaisonOfficer,Investor`;
             this.listFormService._getListItem(this.props.context, restApi)
                 .then((response) => {
-                    this.crtSpace.investorEmail = response.Investor.EMail;
+                    this.investorEmail = response.Investor.EMail;
                     this.setState({
                         items: response,
                         disabled: true,
@@ -312,7 +313,8 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
             Title:this.state.items.Title,
             url:vsiteurl,
             Description:this.state.items.ProjectDescription,
-            investorId:this.state.items.InvestorId,            
+            investorId:this.state.items.InvestorId,  
+            investorEmail: this.investorEmail,         
             context:this.props.context,
             httpReuest:this.props.httpRequest
 
