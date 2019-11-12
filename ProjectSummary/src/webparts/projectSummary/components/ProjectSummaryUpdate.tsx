@@ -508,14 +508,14 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                                         <div className="profile-info-row">
                                             <div className="profile-info-name">Latest Comments</div>
                                             <div className="profile-info-value">
-                                                <TextField id="Comments" label="" readOnly multiline rows={3} onBlur={this.handleChange.bind(this)} disabled={this.state.isAdmin ? false : true} value={this.state.items.Comments}/>
+                                                <TextField label="" readOnly multiline rows={3} disabled value={this.state.items.Comments}/>
                                             </div>
                                         </div>
 
                                         <div className="profile-info-row">
                                             <div className="profile-info-name">Comments</div>
                                             <div className="profile-info-value">
-                                                <TextField id="Comments" label="" underlined multiline rows={3} onBlur={this.handleChange.bind(this)} disabled={this.state.isAdmin ? false : true} value={this.state.items.Comments}/>
+                                            <TextField id="Comments" underlined label="" multiline rows={3} disabled={this.state.isAdmin ? false : true} onBlur={this.handleChange.bind(this)} />
                                             </div>
                                         </div>
 
