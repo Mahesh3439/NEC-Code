@@ -176,6 +176,9 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
                 .then(
                     d => {
                         console.log("Done");
+                        this.setState({
+                            spinner: false
+                        });
                         alert("Approval list has successfuly saved.");
                         this.props.onDissmissPanel();
                         // this.setState({ showPanel: false });                        
@@ -214,6 +217,9 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
     }
     //function to submit the Project summary and for updates
     private async SaveData() {
+        this.setState({
+            spinner: true
+        });
 
         if (this.delteItems.length > 0) {
             for (let ditem of this.delteItems) {
@@ -260,6 +266,17 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
             .then((resp) => {
             });
     }
+
+    
+    private _showPanel = () => {
+        this.setState({ showPanel: true });
+        //  ProjectApprovals._submitData();
+    }
+
+    private _hidePanel = () => {
+        this.setState({ showPanel: false });
+    }
+
 
 
     public render(): React.ReactElement<IProjectApprovalsProps> {

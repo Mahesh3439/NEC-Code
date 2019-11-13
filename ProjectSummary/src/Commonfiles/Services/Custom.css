@@ -1,9 +1,7 @@
 @media only screen and (min-width: 769px) {
-  .widget-Summary .profile-info-name,
-  .widget-Actions .profile-info-name,
   .widget-Specifications .profile-info-name {
-  width:25% !important;
-  ;
+  width:20% !important;
+
 }
    
 }
@@ -14,20 +12,20 @@ textarea:read-only
   background-color: #f4f4f4;
 }
 
-
+/*
 .right .profile-info-row
 {
   display: block !important;
 }
 
-/* h4{
+ h4{
   margin: 5px 0px;
   font-size: 18px;
-} */
+} 
 .right .profile-info-row
 {
   display: block !important;
-}
+}*/
 
 .widget-Summary,.widget-Specifications, .widget-Actions {
   border: 1px solid #dcebf7;

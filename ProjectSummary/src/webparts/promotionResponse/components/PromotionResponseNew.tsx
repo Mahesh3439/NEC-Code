@@ -299,7 +299,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                                     value={this.state.startDate}
                                                     formatDate={this._onFormatDate}
                                                     minDate={new Date()}
-                                                    isMonthPickerVisible={false}
+                                                    isMonthPickerVisible={true}
                                                 />
                                             </div>
                                         </div>
@@ -364,7 +364,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                             </div>
                                             <div className="profile-info-name">Water Consumption</div>
                                             <div className="profile-info-value">
-                                                <TextField id="Water" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} suffix="m³/month" />
+                                                <TextField id="Water" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} suffix="m³/d" />
                                             </div>
 
                                           

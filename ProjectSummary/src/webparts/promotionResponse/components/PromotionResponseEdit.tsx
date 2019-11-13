@@ -46,7 +46,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
       addUsers: [],
       items: {},
       status: null,
-      crtPjtSpace: false,
+      crtPjtSpace: true,
       isAdmin: false,
       pjtAccepted: false,
       showState: false,
@@ -161,13 +161,15 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
       this.setState({
         hideDialog: false,
         pjtAccepted: true,
-        status: item.text
+        status: item.text,
+        crtPjtSpace:true
       });
     }
     else {
       this.setState({
         pjtAccepted: false,
-        status: item.text
+        status: item.text,
+        crtPjtSpace:false
       });
     }
   }
@@ -281,7 +283,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
       spinner: true
     });
 
-    if (this.state.crtPjtSpace == true) {
+    if (this.state.pjtAccepted == true) {
       this._createProject()
         .then((resp) => {
           let itemID = resp.Id;
@@ -535,7 +537,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
                       </div>
                       <div className="profile-info-name">Water Consumption</div>
                       <div className="profile-info-value">
-                        <TextField id="Water" className="wd100" label="" suffix="m³/month" underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.Water} readOnly={this.state.disable} />
+                        <TextField id="Water" className="wd100" label="" suffix="m³/d" underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.Water} readOnly={this.state.disable} />
                       </div>
 
                     </div>
@@ -600,8 +602,8 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
                           onChange={this._getChanges.bind(this, "RFPPStatus")}
                           placeholder="Select an option"
                           options={[
-                            { key: '1', text: 'Proceed with Project Development' },
-                            { key: '2', text: 'Not Successful' }
+                            { key: '1', text: 'Not Successful' },
+                            { key: '2', text: 'Proceed with Project Development' }
                           ]} />
                       </div>
                     </div>

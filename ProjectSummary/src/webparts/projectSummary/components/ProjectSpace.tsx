@@ -308,6 +308,10 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                 }).then((iar: ItemAddResult) => {
                     console.log(iar);
                     alert("Updated Successfully...");
+                    this.setState({
+                        spinner: false
+                    });
+    
                     window.location.href = this.props.context.pageContext.web.absoluteUrl;
 
                 });
@@ -329,6 +333,9 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
     }
 
     private _submitform() {
+        this.setState({
+            spinner: true
+        });
         this.updateData();
 
     }

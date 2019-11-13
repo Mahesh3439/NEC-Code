@@ -435,7 +435,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                                             </div>
                                             <div className="profile-info-name">Water Consumption</div>
                                             <div className="profile-info-value">
-                                                <TextField id="Water" className="wd100" label="" suffix="m³/month" underlined value={this.state.items.Water} readOnly />
+                                                <TextField id="Water" className="wd100" label="" suffix="m³/d" underlined value={this.state.items.Water} readOnly />
                                             </div>                                          
                                           
                                         </div>

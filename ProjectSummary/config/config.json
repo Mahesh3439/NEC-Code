@@ -53,12 +53,9 @@
         "sp-runtime"
       ]
     },
-    "jquery": {
-      "path": "https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.js",
-      "globalName": "jQuery"
-    },
+    
     "MultiFile": {
-      "path": "https://ttengage.sharepoint.com/sites/ttEngage_Dev/SiteAssets/jquery.MultiFile.js",
+      "path": "./src/Commonfiles/Services/jquery.MultiFile.js",
       "globalName": "jQuery"
     },
     "CustomJS": {

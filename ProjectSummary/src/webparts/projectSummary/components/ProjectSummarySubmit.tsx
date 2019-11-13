@@ -457,7 +457,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                                     formatDate={this._onFormatDate}
                                                     minDate={new Date()}
                                                     underlined
-                                                    isMonthPickerVisible={false} />
+                                                    isMonthPickerVisible={true} />
                                             </div>
                                         </div>
                                     </div>
@@ -520,7 +520,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                             </div>
                                             <div className="profile-info-name">Water Consumption</div>
                                             <div className="profile-info-value">
-                                                <TextField className="wd100" id="Water" label="" underlined onBlur={this.handleChange.bind(this)} suffix="m³/month" />
+                                                <TextField className="wd100" id="Water" label="" underlined onBlur={this.handleChange.bind(this)} suffix="m³/d" />
                                             </div>
                                         </div>
                                         <div className="profile-info-row">
