@@ -15,9 +15,9 @@ import * as ReactDom from 'react-dom';
 import pnp, { PermissionKind } from "sp-pnp-js";
 import { sp } from "@pnp/sp";
 
-import { SPPermission } from '@microsoft/sp-page-context';
-import { SPComponentLoader } from '@microsoft/sp-loader';
 
+import { SPComponentLoader } from '@microsoft/sp-loader';
+import { SPHttpClient } from '@microsoft/sp-http';
 require('sp-init');
 require('microsoft-ajax');
 require('sp-runtime');
@@ -44,8 +44,7 @@ export default class NecExtensionApplicationCustomizer
   private _footerPlaceholder: PlaceholderContent;
 
   @override
-  public onInit(): Promise<void> {
-    
+  public onInit(): Promise<void> {    
     SPComponentLoader.loadCss(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/GlobalCSS.css`);
 
     SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
@@ -56,15 +55,20 @@ export default class NecExtensionApplicationCustomizer
       SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.MultiFile.js`, {
         globalExportsName: 'jQuery'
       });
-      SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/NavContol.js`, {
-        globalExportsName: 'getUserGroups'
-      });
+      // SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/NavContol.js`, {
+      //   globalExportsName: 'getUserGroups'
+      // });
     }).catch((error) => {
 
     });
     Log.info(LOG_SOURCE, `Initialized ${strings.Title}`);
     this.context.placeholderProvider.changedEvent.add(this, () => {
       this._renderPlaceHolders();
+    });
+
+    this.context.application.navigatedEvent.add(this,()=>{
+      this._getUserGroups();
+     
     });
 
     return Promise.resolve();
@@ -148,5 +152,48 @@ export default class NecExtensionApplicationCustomizer
 
     }
   } 
+
+  public async _getUserGroups(){
+
+    if(!sessionStorage.getItem("UserGroups")){
+    const restApi = `${this.context.pageContext.web.absoluteUrl}/_api/web/currentuser/?$expand=groups`;
+    await this.context.spHttpClient.get(restApi, SPHttpClient.configurations.v1)
+      .then(resp => { return resp.json(); })
+      .then((data)=>
+      {
+        sessionStorage.setItem("UserGroups",JSON.stringify(data.Groups));
+        this._ControlNavigation();
+      });
+    }
+    else{
+      this._ControlNavigation();
+    }   
+
+  }
+
+  public _ControlNavigation()
+  {
+    let userGroups = JSON.parse(sessionStorage.getItem("UserGroups"));
+
+    for (const uGroup of userGroups) {
+      if(uGroup.Title=="IF Admin")
+      {
+        document.getElementById('O365_MainLink_Settings').style.display = 'block';
+        document.getElementsByName("Submit Project")[0].style.display = "block";
+        return false;
+      }
+      else if(uGroup.Title=="Investors")
+      {
+        document.getElementsByName("Submit Project")[0].style.display = "block";
+        return false;
+      }
+      else if(uGroup.Title=="Approval Agencies")
+      {
+        document.getElementsByName("Dashboard")[0].style.display = "block";
+        return false;
+        
+      }
+    }
+  }
 
 }

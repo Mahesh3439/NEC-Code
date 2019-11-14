@@ -47,6 +47,18 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
             spinner:false,
             disable:false
         };
+
+        SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
+            globalExportsName: 'jQuery'
+          }).catch((error) => {
+      
+          }).then(() => {
+            SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.MultiFile.js`, {
+              globalExportsName: 'jQuery'
+            });           
+          }).catch((error) => {
+      
+          });
         
         this.listFormService = new ListFormService(props.context.spHttpClient);
         this.PItemId = Number(window.location.search.split("PRID=")[1]);
@@ -59,9 +71,13 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                         items: response
                     });
 
-                    CustomJS.load();
+                   
                 });
         }
+
+        setTimeout(() => {
+            CustomJS.load();
+        }, 2500);
 
     }
 
@@ -383,11 +399,13 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                 </div>
                             </div>
                         </div>
+                    
+                    
                     </div>
 
 
-                    <div className="profile-info-row">
-                    <div className="profile-info-name">Promotion Response Attachments </div>
+                    <div className="profile-info-row" style={{margin:"5px"}}>
+                    <div className="profile-info-name" style={{color:"black",font:"bold"}}>Promotion Response Attachments </div>
                         <div id='txtAttachemtns' style={{ margin: "5px" }}>
                             <input id='Attachments' type='file' className='multy' multiple></input>
                         </div>

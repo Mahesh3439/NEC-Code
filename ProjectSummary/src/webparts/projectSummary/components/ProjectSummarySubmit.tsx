@@ -68,6 +68,8 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
         };
 
 
+       
+
         this.listFormService = new ListFormService(props.context.spHttpClient);
         this._getProjectActions();
 
@@ -84,7 +86,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 }));
             }).then(() => {
                 CustomJS.load();
-            });      
+            });
     }
 
     //Method to convert single line text to multy line field in html.
@@ -347,10 +349,8 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             return false;
         }
 
-        if(this.state.isAdmin)
-        {
-            if(this.props.context.pageContext.user.email == $(".ms-Persona-secondaryText")[0].textContent)
-            {
+        if (this.state.isAdmin) {
+            if (this.props.context.pageContext.user.email == $(".ms-Persona-secondaryText")[0].textContent) {
                 alert("Admin can't be an Investor, please select correct investor");
                 return false;
             }
@@ -370,8 +370,11 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             });
     }
 
-    public ProjectSpace() {
+    public async ProjectSpace() {
         let vsiteurl = `ProjectSpace${this.ItemId}`;
+
+
+
         this.crtSpace = {
             Title: this.PjtTitle,
             url: vsiteurl,
@@ -412,6 +415,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                         this.ItemAttachments();
                     });
             });
+
     }
 
 
@@ -596,7 +600,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                         <div className="profile-info-row">
                                             <div className="profile-info-name">Comments</div>
                                             <div className="profile-info-value">
-                                            <TextField id="Comments" underlined label="" multiline rows={3} onBlur={this.handleChange.bind(this)} />
+                                                <TextField id="Comments" underlined label="" multiline rows={3} onBlur={this.handleChange.bind(this)} />
                                             </div>
                                         </div>
 
@@ -630,7 +634,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
 
                 <div className={styles.pullright}>
                     <PrimaryButton title="Clear" text="Clear" allowDisabledFocus onClick={() => window.location.reload()}></PrimaryButton>
-                    &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() =>  this._submitform()}></PrimaryButton>
+                    &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
                     &nbsp;&nbsp;<PrimaryButton title="Close" text="Close" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
                 </div>
 

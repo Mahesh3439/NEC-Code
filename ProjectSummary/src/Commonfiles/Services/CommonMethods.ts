@@ -122,6 +122,7 @@ export class ListFormService implements IListFormService {
    */
 
   public async _creatProjectSpace(crtSpace: IcreateSpace) {
+    try {
     let Api = `${crtSpace.context.pageContext.web.absoluteUrl}/_api/web/GetAvailableWebTemplates(lcid=1033)?$filter=Title eq 'ProjectSpace'`;
     return crtSpace.context.spHttpClient.get(Api, SPHttpClient.configurations.v1)
       .then(resp => { return resp.json(); })
@@ -143,8 +144,15 @@ export class ListFormService implements IListFormService {
           }`
         };
         return await crtSpace.context.spHttpClient.post(postURL, SPHttpClient.configurations.v1, spOpts)
-          .then((response: SPHttpClientResponse) => {
+          .then(async (response: SPHttpClientResponse) => {
+            if(response.ok)
             return response.json();
+            else
+            {
+              const respText = await response.text();
+              throw new Error(respText.toString());
+            }
+
           }).then(async res => {
             await this._getGroups(this._vSiteGroups,crtSpace.context.pageContext.site.absoluteUrl);
             await this._assigneUser(this._vSiteGroups,res.ServerRelativeUrl, crtSpace.investorId);
@@ -152,6 +160,17 @@ export class ListFormService implements IListFormService {
             return res;
           });
       });
+    }     
+      catch (error) {
+        let errorLog = {
+            component: "Project Space creteion",
+            page: window.location.href,
+            Module: "Project Space",
+            exception: error
+        }
+        await this._logError(crtSpace.context.pageContext.site.absoluteUrl, errorLog);
+       
+    }
   }
 
 

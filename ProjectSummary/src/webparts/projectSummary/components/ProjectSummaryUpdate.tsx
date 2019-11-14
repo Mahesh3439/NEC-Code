@@ -6,7 +6,7 @@ import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 
 import styles from './ProjectSummary.module.scss';
 import { IProjectSummaryProps, IListItem, } from './IProjectSummaryProps';
-import {  IErrorLog } from './IProjectSummarySubmitProps';
+import { IErrorLog } from './IProjectSummarySubmitProps';
 import { escape } from '@microsoft/sp-lodash-subset';
 //import * as CustomJS from 'CustomJS';
 import * as $ from 'jQuery';
@@ -21,7 +21,7 @@ import {
     IDropdownOption
 } from "office-ui-fabric-react/lib/Dropdown";
 import { ListFormService } from '../../../Commonfiles/Services/CommonMethods';
-import { IListFormService,IcreateSpace } from '../../../Commonfiles/Services/ICommonMethods';
+import { IListFormService, IcreateSpace } from '../../../Commonfiles/Services/ICommonMethods';
 //import '../../../Commonfiles/Services/customStyles.css';
 import '../../../Commonfiles/Services/Custom.css';
 import { ListItemAttachments } from '@pnp/spfx-controls-react/lib/ListItemAttachments';
@@ -56,7 +56,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
     public PjtStatus: string;
     public errorLog: IErrorLog = {};
     public crtSpace: IcreateSpace = {};
-    public investorEmail:string=null;
+    public investorEmail: string = null;
 
 
 
@@ -248,12 +248,12 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
     //function to submit the Project summary and for updates   
     public async updateData() {
         return this.listFormService._getListItemEntityTypeName(this.props.context, "Projects")
-            .then( async listItemEntityTypeName => {
+            .then(async listItemEntityTypeName => {
                 let vbody: string = this._getupdateBodyContent(listItemEntityTypeName);
                 await this.listFormService._getListItem_etag(this.props.context, "Projects", this.ItemId)
-                .then((resp) => {
-                    this.etag = resp;
-                });
+                    .then((resp) => {
+                        this.etag = resp;
+                    });
                 return await this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Projects')/items(${this.ItemId})`, SPHttpClient.configurations.v1, {
                     headers: {
                         'Accept': 'application/json;odata=nometadata',
@@ -278,7 +278,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                     Module: "Data updating",
                     exception: error
                 }
-    
+
                 await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
                 this.setState({
                     spinner: false
@@ -289,7 +289,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
 
     private _submitform() {
 
-        if(this.ActionTakenKey == 1 && !this.liaisonofficer){
+        if (this.ActionTakenKey == 1 && !this.liaisonofficer) {
             alert("Liaison Officer is required");
             return false;
         }
@@ -301,34 +301,62 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
 
     }
 
-    public ProjectSpace() {
+    public async ProjectSpace() {
         this.setState({
             spinner: true
         });
-        let vsiteurl = `ProjectSpace${this.ItemId}`;
-        let vsiteTitle = this.state.items.Title;
-        let vsiteDesp = this.state.items.ProjectDescription;
 
-        this.crtSpace = {
-            Title:this.state.items.Title,
-            url:vsiteurl,
-            Description:this.state.items.ProjectDescription,
-            investorId:this.state.items.InvestorId,  
-            investorEmail: this.investorEmail,         
-            context:this.props.context,
-            httpReuest:this.props.httpRequest
+        let isSpaceAvailable: boolean = false;
+
+        let spaceURL = `${this.props.context.pageContext.web.absoluteUrl}/ProjectSpace${this.ItemId}/_api/web`;
+        await this.props.context.spHttpClient.get(spaceURL, SPHttpClient.configurations.v1)
+            .then(resp => {
+                if (resp.ok)
+                    return resp.json();
+                else
+                    return null;
+
+            })
+            .then((r) => {
+                if (r)
+                    isSpaceAvailable = true;
+            });
+
+        if (!isSpaceAvailable) {
+            let vsiteurl = `ProjectSpace${this.ItemId}`;
+            let vsiteTitle = this.state.items.Title;
+            let vsiteDesp = this.state.items.ProjectDescription;
+
+            this.crtSpace = {
+                Title: this.state.items.Title,
+                url: vsiteurl,
+                Description: this.state.items.ProjectDescription,
+                investorId: this.state.items.InvestorId,
+                investorEmail: this.investorEmail,
+                context: this.props.context,
+                httpReuest: this.props.httpRequest
+
+            }
+
+            this.listFormService._creatProjectSpace(this.crtSpace)
+                .then((responseJSON) => {
+                    this.fields.push("ProjectURL");
+                    this.setState({
+                        hideDialog: true,
+                        pjtSpace: responseJSON.ServerRelativeUrl == undefined ? `${this.props.context.pageContext.site.absoluteUrl}/ProjectSpace${this.ItemId}` : `https://ttengage.sharepoint.com${responseJSON.ServerRelativeUrl}`,
+                        spinner: false
+                    });
+                });
+        }
+        else {
+            this.fields.push("ProjectURL");
+            this.setState({
+                hideDialog: true,
+                pjtSpace: `${this.props.context.pageContext.site.absoluteUrl}/ProjectSpace${this.ItemId}`,
+                spinner: false
+            });
 
         }
-
-        this.listFormService._creatProjectSpace(this.crtSpace)
-            .then((responseJSON) => {
-                this.fields.push("ProjectURL");
-                this.setState({
-                    hideDialog: true,
-                    pjtSpace: responseJSON.ServerRelativeUrl == undefined ? `${this.props.context.pageContext.site.absoluteUrl}/ProjectSpace${this.ItemId}` : `https://ttengage.sharepoint.com${responseJSON.ServerRelativeUrl}`,
-                    spinner: false
-                });
-            });
     }
 
 
@@ -406,18 +434,18 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                                             </div>
                                         </div>
                                         <div className="profile-info-row">
-                                        <div className="profile-info-name">Port Requirement </div>
+                                            <div className="profile-info-name">Port Requirement </div>
                                             <div className="profile-info-value">
-                                                <TextField id="Port" className="wd100"  multiline rows={3} label="" underlined value={this.state.items.Port} readOnly />
+                                                <TextField id="Port" className="wd100" multiline rows={3} label="" underlined value={this.state.items.Port} readOnly />
                                             </div>
                                             <div className="profile-info-name">Natural Gas Usage</div>
                                             <div className="profile-info-value">
                                                 <TextField id="Naturalgas" className="wd100" suffix="mmscf/d" underlined value={this.state.items.Naturalgas} readOnly />
                                             </div>
-                                            
+
                                         </div>
                                         <div className="profile-info-row">
-                                        <div className="profile-info-name">Warehousing Requirements </div>
+                                            <div className="profile-info-name">Warehousing Requirements </div>
                                             <div className="profile-info-value">
                                                 <TextField id="WarehousingRequirements" className="wd100" multiline rows={3} label="" underlined value={this.state.items.WarehousingRequirements} readOnly />
                                             </div>
@@ -426,25 +454,25 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                                                 <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field wd100" suffix="MW" underlined value={this.state.items.ElectricityMW} readOnly />
                                                 <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field wd100" suffix="kVA" underlined value={this.state.items.ElectricityKW} readOnly />
                                             </div>
-                                            
+
                                         </div>
                                         <div className="profile-info-row">
-                                        <div className="profile-info-name">If Energy Efficient Project, Potential Savings </div>
+                                            <div className="profile-info-name">If Energy Efficient Project, Potential Savings </div>
                                             <div className="profile-info-value">
                                                 <TextField id="PotentialSaving" className="wd100" label="" underlined value={this.state.items.PotentialSaving} readOnly />
                                             </div>
                                             <div className="profile-info-name">Water Consumption</div>
                                             <div className="profile-info-value">
                                                 <TextField id="Water" className="wd100" label="" suffix="m³/d" underlined value={this.state.items.Water} readOnly />
-                                            </div>                                          
-                                          
+                                            </div>
+
                                         </div>
-                                        <div className="profile-info-row" >                                           
+                                        <div className="profile-info-row" >
                                             <div className="profile-info-name">Other </div>
                                             <div className="profile-info-value">
                                                 <TextField id="Other" className="wd100" label="" multiline rows={3} underlined value={this.state.items.Other} readOnly />
                                             </div>
-                                            
+
                                             <div className="profile-info-name">Land Requirements </div>
                                             <div className="profile-info-value">
                                                 <TextField id="Land" className="wd100" label="" suffix="hectares" underlined value={this.state.items.Land} readOnly />
@@ -508,14 +536,14 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                                         <div className="profile-info-row">
                                             <div className="profile-info-name">Latest Comments</div>
                                             <div className="profile-info-value">
-                                                <TextField label="" readOnly multiline rows={3} disabled value={this.state.items.Comments}/>
+                                                <TextField label="" readOnly multiline rows={3} disabled value={this.state.items.Comments} />
                                             </div>
                                         </div>
 
                                         <div className="profile-info-row">
                                             <div className="profile-info-name">Comments</div>
                                             <div className="profile-info-value">
-                                            <TextField id="Comments" underlined label="" multiline rows={3} disabled={this.state.isAdmin ? false : true} onBlur={this.handleChange.bind(this)} />
+                                                <TextField id="Comments" underlined label="" multiline rows={3} disabled={this.state.isAdmin ? false : true} onBlur={this.handleChange.bind(this)} />
                                             </div>
                                         </div>
 
@@ -525,7 +553,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                         </div>
                     </div>
 
-                  
+
 
                     <div className={styles.pullright}>
 
