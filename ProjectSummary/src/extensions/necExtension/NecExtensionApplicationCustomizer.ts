@@ -64,12 +64,13 @@ export default class NecExtensionApplicationCustomizer
     Log.info(LOG_SOURCE, `Initialized ${strings.Title}`);
     this.context.placeholderProvider.changedEvent.add(this, () => {
       this._renderPlaceHolders();
+      this._getUserGroups();
     });
 
-    this.context.application.navigatedEvent.add(this,()=>{
-      this._getUserGroups();
+    // this.context.application.navigatedEvent.add(this,async ()=>{
+    //   await this._getUserGroups();
      
-    });
+    // });
 
     return Promise.resolve();
   }
@@ -180,6 +181,7 @@ export default class NecExtensionApplicationCustomizer
       {
         document.getElementById('O365_MainLink_Settings').style.display = 'block';
         document.getElementsByName("Submit Project")[0].style.display = "block";
+        
         return false;
       }
       else if(uGroup.Title=="Investors")

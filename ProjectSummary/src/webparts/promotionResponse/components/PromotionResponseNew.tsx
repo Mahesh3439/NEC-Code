@@ -404,7 +404,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                     </div>
 
 
-                    <div className="profile-info-row" style={{margin:"5px"}}>
+                    <div className="profile-info-row" style={{margin:"5px",display:"inline-table"}}>
                     <div className="profile-info-name" style={{color:"black",font:"bold"}}>Promotion Response Attachments </div>
                         <div id='txtAttachemtns' style={{ margin: "5px" }}>
                             <input id='Attachments' type='file' className='multy' multiple></input>
