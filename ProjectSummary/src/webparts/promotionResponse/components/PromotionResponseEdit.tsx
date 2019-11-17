@@ -189,6 +189,14 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
         crtPjtSpace: isChecked
       });
 
+      if(isChecked == false)
+      {
+        this.setState(
+          {
+            pjtAccepted: false
+          }); 
+      }
+
     this.fields.push("withPjtSpace");
     //console.log(`The option has been changed to ${isChecked}.`);
   }

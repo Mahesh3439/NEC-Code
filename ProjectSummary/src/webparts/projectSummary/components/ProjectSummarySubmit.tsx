@@ -68,7 +68,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
         };
 
 
-       
+
 
         this.listFormService = new ListFormService(props.context.spHttpClient);
         this._getProjectActions();
@@ -86,7 +86,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 }));
             }).then(() => {
                 CustomJS.load();
-            });
+            });              
     }
 
     //Method to convert single line text to multy line field in html.
@@ -236,10 +236,12 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             $.each(attachemnts, function (index, file) {
                 let afile = file as HTMLInputElement;
                 if (afile.files.length > 0) {
-                    itemAttachments.push({
-                        name: afile.files[0].name,
-                        content: afile.files[0]
-                    });
+                    for (let index=0;afile.files.length>index;index++) {
+                        itemAttachments.push({
+                            name: afile.files[index].name,
+                            content: afile.files[index]
+                        });                                
+                    }    
                 }
             });
 
@@ -614,7 +616,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                         <div className="profile-info-row">
                             <div className="profile-info-name"> Upload Attachments </div>
                             <div id='txtAttachemtns' style={{ margin: "5px" }}>
-                                <input id='Attachments' type='file' className='multy'></input>
+                                <input id='Attachments' type='file' className='multi' multiple></input>
                             </div>
                         </div>
                     </div>

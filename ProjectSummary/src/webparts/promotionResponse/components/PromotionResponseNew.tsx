@@ -18,6 +18,7 @@ import { sp, Web } from "@pnp/sp";
 //import '../../../Commonfiles/Services/customStyles.css';
 import '../../../Commonfiles/Services/Custom.css';
 
+
 export default class PromotionResponseNew extends React.Component<IPromotionResponseProps, IPromotionResponseState, {}> {
 
     private listFormService: IListFormService;
@@ -75,9 +76,9 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                 });
         }
 
-        setTimeout(() => {
-            CustomJS.load();
-        }, 2500);
+        // setTimeout(() => {
+        //     CustomJS.load();
+        // }, 2500);
 
     }
 
@@ -221,17 +222,20 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                 let attachemnts = $("#Attachments input:file");
                 if (attachemnts.length > 1) {
                     var itemAttachments = [];
-                    $.each(attachemnts, function (index, file) {
-                        let afile = file as HTMLInputElement;
+                    $.each(attachemnts, function (index, attachment) {
+                        let afile = attachment as HTMLInputElement;
                         if (afile.files.length > 0) {
-                            itemAttachments.push({
-                                name: afile.files[0].name,
-                                content: afile.files[0]
-                            });
+                            for (let index=0;afile.files.length>index;index++) {
+                                itemAttachments.push({
+                                    name: afile.files[index].name,
+                                    content: afile.files[index]
+                                });                                
+                            }                           
                         }
                     });
-
-                    let ListItem = sp.web.lists.getByTitle(`${listTitle}`).items.getById(itemID);
+                    let siteURL = this.props.context.pageContext.web.absoluteUrl;
+                    let web = new Web(siteURL);
+                    let ListItem = web.lists.getByTitle(`${listTitle}`).items.getById(itemID);
                     ListItem.attachmentFiles.addMultiple(itemAttachments)
                         .then(r => {
                             console.log(r);
@@ -407,7 +411,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                     <div className="profile-info-row" style={{margin:"5px",display:"inline-table"}}>
                     <div className="profile-info-name" style={{color:"black",font:"bold"}}>Promotion Response Attachments </div>
                         <div id='txtAttachemtns' style={{ margin: "5px" }}>
-                            <input id='Attachments' type='file' className='multy' multiple></input>
+                            <input name="files[]" id='Attachments' type='file' className='multi with-preview' multiple></input>
                         </div>
                     </div>
 

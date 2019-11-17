@@ -1,7 +1,8 @@
 var CustomJS = {
     load: function () {
         $('#Attachments').MultiFile({
-            onFileChange: function () {                
+            onFileChange: function () { 
+                console.log(this, arguments);               
             }
         });
     },

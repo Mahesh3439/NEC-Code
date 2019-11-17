@@ -461,47 +461,47 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                 </div>
 
                                 <div className="profile-info-row">
-                                    <label className="blod">Investors : </label>
+                                    <label className="blod">Investors: </label>
                                     {this.state.items.Listofinvestors}
                                 </div>
                                 <div className="profile-info-row">
-                                    <label className="blod">Products : </label>
+                                    <label className="blod">Products: </label>
                                     {this.state.items.Productsandassociatedquantities}
                                 </div>
                                 <div className="profile-info-row">
-                                    <label className="blod">CapEx : </label>
+                                    <label className="blod">CapEx: </label>
                                     US$ {this.state.items.CapitalExpenditure}  million
                                 </div>
                                 <div className="profile-info-row">
-                                    <label className="blod">Start Date : </label>
+                                    <label className="blod">Start Date: </label>
                                     {moment(this.state.startDate).format("DD/MM/YYYY")}
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.Naturalgas ? {} : { display: 'none' }}>
-                                    <label className="blod">Natural Gas : </label>
+                                    <label className="blod">Natural Gas: </label>
                                     {this.state.items.Naturalgas}
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.ElectricityMW ? {} : { display: 'none' }}>
-                                    <label className="blod">Electricity : </label>
+                                    <label className="blod">Electricity: </label>
                                     {this.state.items.ElectricityMW}
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.Water ? {} : { display: 'none' }}>
-                                    <label className="blod">Water : </label>
+                                    <label className="blod">Water: </label>
                                     {this.state.items.Water}
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.Land ? {} : { display: 'none' }}>
-                                    <label className="blod">Land : </label>
+                                    <label className="blod">Land: </label>
                                     {this.state.items.Land}
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.Port ? {} : { display: 'none' }}>
-                                    <label className="blod">Port : </label>
+                                    <label className="blod">Port: </label>
                                     {this.state.items.Port}
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.WarehousingRequirements ? {} : { display: 'none' }}>
-                                    <label className="blod">Warehousing : </label>
+                                    <label className="blod">Warehousing: </label>
                                     {this.state.items.WarehousingRequirements}
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.PotentialSaving ? {} : { display: 'none' }}>
-                                    <label className="blod">Potential Saving : </label>
+                                    <label className="blod">Potential Savings: </label>
                                     {this.state.items.PotentialSaving}
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.Other ? {} : { display: 'none' }}>
