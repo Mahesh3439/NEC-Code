@@ -479,18 +479,22 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                 <div className="profile-info-row" style={this.state.items.Naturalgas ? {} : { display: 'none' }}>
                                     <label className="blod">Natural Gas: </label>
                                     {this.state.items.Naturalgas}
+                                    <label> &nbsp;mmscf/d</label>
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.ElectricityMW ? {} : { display: 'none' }}>
                                     <label className="blod">Electricity: </label>
                                     {this.state.items.ElectricityMW}
+                                    <label> &nbsp;MW</label>  &nbsp;  {this.state.items.ElectricityKW} <label> &nbsp;kVA</label>
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.Water ? {} : { display: 'none' }}>
                                     <label className="blod">Water: </label>
                                     {this.state.items.Water}
+                                    <label> &nbsp;m³/d</label>
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.Land ? {} : { display: 'none' }}>
                                     <label className="blod">Land: </label>
                                     {this.state.items.Land}
+                                    <label> &nbsp;hectares</label>
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.Port ? {} : { display: 'none' }}>
                                     <label className="blod">Port: </label>
