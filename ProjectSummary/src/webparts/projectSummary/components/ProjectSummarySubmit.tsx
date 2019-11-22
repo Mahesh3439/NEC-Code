@@ -86,7 +86,8 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 }));
             }).then(() => {
                 CustomJS.load();
-            });              
+            });  
+            
     }
 
     //Method to convert single line text to multy line field in html.
@@ -254,7 +255,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                     this.setState({
                         spinner: false
                     });
-                    alert("Project Successfully submitted");
+                    alert("Your Project has been successfully submitted");
                     window.location.href = this.props.context.pageContext.web.absoluteUrl;
                 }).catch(async function (err) {
                     this.errorLog = {
@@ -275,7 +276,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             this.setState({
                 spinner: false
             });
-            alert("Project Successfully submitted");
+            alert("Your Project has been successfully submitted");
             window.location.href = this.props.context.pageContext.web.absoluteUrl;
         }
 
@@ -374,8 +375,6 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
 
     public async ProjectSpace() {
         let vsiteurl = `ProjectSpace${this.ItemId}`;
-
-
 
         this.crtSpace = {
             Title: this.PjtTitle,
@@ -520,7 +519,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                             </div>
                                         </div>
                                         <div className="profile-info-row">
-                                            <div className="profile-info-name">If Energy Efficient Project, Potential Savings </div>
+                                            <div className="profile-info-name">If Energy Efficiency Project, Potential Savings </div>
                                             <div className="profile-info-value">
                                                 <TextField className="wd100" id="PotentialSaving" label="" underlined onBlur={this.handleChange.bind(this)} />
                                             </div>
@@ -634,7 +633,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                     }
                 </div>
 
-                <div className={styles.pullright}>
+                <div className="pull-right mtp btmp">
                     <PrimaryButton title="Clear" text="Clear" allowDisabledFocus onClick={() => window.location.reload()}></PrimaryButton>
                     &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
                     &nbsp;&nbsp;<PrimaryButton title="Close" text="Close" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>

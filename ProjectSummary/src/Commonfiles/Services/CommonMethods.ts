@@ -9,8 +9,8 @@ import { sp, Web, WebAddResult } from "@pnp/sp";
 
 export interface IGroups {
   IFAdmin?: number,
-  Liaison?:number,
-  Agency?:number
+  Liaison?: number,
+  Agency?: number
 }
 
 export class ListFormService implements IListFormService {
@@ -20,8 +20,8 @@ export class ListFormService implements IListFormService {
     this.spHttpClient = spHttpClient;
   }
 
-  public _vSiteGroups:IGroups={};
-  
+  public _vSiteGroups: IGroups = {};
+
 
   /**
    * Gets the schema for all relevant fields for a specified SharePoint list form.
@@ -123,15 +123,15 @@ export class ListFormService implements IListFormService {
 
   public async _creatProjectSpace(crtSpace: IcreateSpace) {
     try {
-    let Api = `${crtSpace.context.pageContext.web.absoluteUrl}/_api/web/GetAvailableWebTemplates(lcid=1033)?$filter=Title eq 'ProjectSpace'`;
-    return crtSpace.context.spHttpClient.get(Api, SPHttpClient.configurations.v1)
-      .then(resp => { return resp.json(); })
-      .then(async (response) => {
-        let items = response.value[0];
-        let templateName = items.Name;
-        const postURL: string = `${crtSpace.context.pageContext.web.absoluteUrl}/_api/web/webinfos/add`;
-        const spOpts: ISPHttpClientOptions = {
-          body: `{
+      let Api = `${crtSpace.context.pageContext.web.absoluteUrl}/_api/web/GetAvailableWebTemplates(lcid=1033)?$filter=Title eq 'ProjectSpace'`;
+      return crtSpace.context.spHttpClient.get(Api, SPHttpClient.configurations.v1)
+        .then(resp => { return resp.json(); })
+        .then(async (response) => {
+          let items = response.value[0];
+          let templateName = items.Name;
+          const postURL: string = `${crtSpace.context.pageContext.web.absoluteUrl}/_api/web/webinfos/add`;
+          const spOpts: ISPHttpClientOptions = {
+            body: `{
           "parameters":{
                 "@odata.type": "#SP.WebInfoCreationInformation",
                 "Title": "${crtSpace.Title}", 
@@ -142,34 +142,33 @@ export class ListFormService implements IListFormService {
                 "UseUniquePermissions": true
               }
           }`
-        };
-        return await crtSpace.context.spHttpClient.post(postURL, SPHttpClient.configurations.v1, spOpts)
-          .then(async (response: SPHttpClientResponse) => {
-            if(response.ok)
-            return response.json();
-            else
-            {
-              const respText = await response.text();
-              throw new Error(respText.toString());
-            }
+          };
+          return await crtSpace.context.spHttpClient.post(postURL, SPHttpClient.configurations.v1, spOpts)
+            .then(async (response: SPHttpClientResponse) => {
+              if (response.ok)
+                return response.json();
+              else {
+                const respText = await response.text();
+                throw new Error(respText.toString());
+              }
 
-          }).then(async res => {
-            await this._getGroups(this._vSiteGroups,crtSpace.context.pageContext.site.absoluteUrl);
-            await this._assigneUser(this._vSiteGroups,res.ServerRelativeUrl, crtSpace.investorId);
-            await this._assigneLicence(res.ServerRelativeUrl, crtSpace.httpReuest, crtSpace.investorEmail);
-            return res;
-          });
-      });
-    }     
-      catch (error) {
-        let errorLog = {
-            component: "Project Space creteion",
-            page: window.location.href,
-            Module: "Project Space",
-            exception: error
-        }
-        await this._logError(crtSpace.context.pageContext.site.absoluteUrl, errorLog);
-       
+            }).then(async res => {
+              await this._getGroups(this._vSiteGroups, crtSpace.context.pageContext.site.absoluteUrl);
+              await this._assigneUser(this._vSiteGroups, res.ServerRelativeUrl, crtSpace.investorId);
+              await this._assigneLicence(res.ServerRelativeUrl, crtSpace.httpReuest, crtSpace.investorEmail);
+              return res;
+            });
+        });
+    }
+    catch (error) {
+      let errorLog = {
+        component: "Project Space creteion",
+        page: window.location.href,
+        Module: "Project Space",
+        exception: error
+      }
+      await this._logError(crtSpace.context.pageContext.site.absoluteUrl, errorLog);
+
     }
   }
 
@@ -184,7 +183,7 @@ export class ListFormService implements IListFormService {
        * roleDefId -- 1073741827 -- Contribute
        */
 
-  public async _assigneUser(_vSiteGroups:IGroups,siteURL: string, investor: number) {
+  public async _assigneUser(_vSiteGroups: IGroups, siteURL: string, investor: number) {
     let webURL = `https://ttengage.sharepoint.com${siteURL}`;
 
     let web = new Web(webURL);
@@ -192,13 +191,32 @@ export class ListFormService implements IListFormService {
     let Liaison = _vSiteGroups.Liaison;
     let Agency = _vSiteGroups.Agency;
 
+    let invRollDef: number = 1073741926;
+
 
     //Assigning existing groups to Project Space
     web.roleAssignments.add(IFAdmin, 1073741829);
     web.roleAssignments.add(Liaison, 1073741827);
     //Assigning access to the Investor with contribute rights.
     //UserId and roleDefId
-    web.roleAssignments.add(investor, 1073741827);
+    web.roleAssignments.add(investor, invRollDef);
+
+    web.lists.getByTitle("Documents")
+    .rootFolder
+    .folders
+    .add("Project Summary").then(async function(data) {
+
+      let folderURL = `${siteURL}/Shared%20Documents/Project%20Summary`;
+      let summaryFolder = web.getFolderByServerRelativeUrl(folderURL);
+      let folder = await summaryFolder.getItem();
+      await folder.breakRoleInheritance(false);
+      await folder.roleAssignments.add(Agency, 1073741827);
+      await folder.roleAssignments.add(Liaison, 1073741829);
+      await folder.roleAssignments.add(IFAdmin, 1073741827);
+        
+    }).catch(function(err) {
+        console.log(err);        
+    });
 
 
     let Approvals = web.lists.getByTitle("Approvals");
@@ -214,7 +232,7 @@ export class ListFormService implements IListFormService {
       await page.roleAssignments.add(Agency, 1073741827);
       await page.roleAssignments.add(Liaison, 1073741829);
       await page.roleAssignments.add(IFAdmin, 1073741827);
-      await page.roleAssignments.add(investor, 1073741827);
+      await page.roleAssignments.add(investor, invRollDef);
     }
 
     /**
@@ -224,13 +242,13 @@ export class ListFormService implements IListFormService {
     Approvals.roleAssignments.add(Agency, 1073741827);
     Approvals.roleAssignments.add(Liaison, 1073741829);
     Approvals.roleAssignments.add(IFAdmin, 1073741827);
-    Approvals.roleAssignments.add(investor, 1073741827);
+    Approvals.roleAssignments.add(investor, invRollDef);
 
     await issues.breakRoleInheritance(false);
     issues.roleAssignments.add(Agency, 1073741827);
     issues.roleAssignments.add(Liaison, 1073741829);
     issues.roleAssignments.add(IFAdmin, 1073741827);
-    issues.roleAssignments.add(investor, 1073741827);
+    issues.roleAssignments.add(investor, invRollDef);
   }
 
   /**
@@ -278,25 +296,21 @@ export class ListFormService implements IListFormService {
   }
 
 
-  public async _getGroups(_vSiteGroups:IGroups,webURL:string)
-  {
+  public async _getGroups(_vSiteGroups: IGroups, webURL: string) {
     let web = new Web(webURL);
-    await web.siteGroups.get().then(function(data) {    
+    await web.siteGroups.get().then(function (data) {
       for (let group of data) {
-        if(group.Title == "IF Admin")
-        {
+        if (group.Title == "IF Admin") {
           _vSiteGroups.IFAdmin = group.Id;
         }
-        else if(group.Title == "Liaison Officer")
-        {
+        else if (group.Title == "Liaison Officer") {
           _vSiteGroups.Liaison = group.Id;
         }
-        else if(group.Title == "Approval Agencies")
-        {
+        else if (group.Title == "Approval Agencies") {
           _vSiteGroups.Agency = group.Id;
-        }         
-      }     
-  });
+        }
+      }
+    });
 
   }
 

@@ -457,7 +457,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
 
                                         </div>
                                         <div className="profile-info-row">
-                                            <div className="profile-info-name">If Energy Efficient Project, Potential Savings </div>
+                                            <div className="profile-info-name">If Energy Efficiency Project, Potential Savings </div>
                                             <div className="profile-info-value">
                                                 <TextField id="PotentialSaving" className="wd100" label="" underlined value={this.state.items.PotentialSaving} readOnly />
                                             </div>
@@ -555,7 +555,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
 
 
 
-                    <div className={styles.pullright}>
+                    <div className="pull-right mtp btmp">
 
                         <PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()} style={(this.state.isAdmin && this.state.items.ActionTakenId !== '1') ? {} : { display: 'none' }}></PrimaryButton>
                         &nbsp;&nbsp;<PrimaryButton title="Close" text="Close" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>

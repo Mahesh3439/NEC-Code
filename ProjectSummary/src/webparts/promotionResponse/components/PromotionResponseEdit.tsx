@@ -251,7 +251,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
       },
     };
 
-    bodyContent["Title"] = this.state.items.Title;
+    bodyContent["Title"] = this.state.items.PjtTitle;
     bodyContent["ProjectDescription"] = this.state.items.ProjectDescription;
     bodyContent["Listofinvestors"] = this.state.items.Listofinvestors;
     bodyContent["Productsandassociatedquantities"] = this.state.items.Productsandassociatedquantities;
@@ -539,7 +539,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
                       </div>
                     </div>
                     <div className="profile-info-row">
-                      <div className="profile-info-name">If Energy Efficient Project, Potential Savings </div>
+                      <div className="profile-info-name">If Energy Efficiency Project, Potential Savings </div>
                       <div className="profile-info-value">
                         <TextField id="PotentialSaving" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} defaultValue={this.state.items.PotentialSaving} readOnly={this.state.disable} />
                       </div>
@@ -660,7 +660,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
           </div>
 
 
-          <div className={styles.pullright}>
+          <div className="pull-right mtp btmp">
             <PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()} style={((this.state.isAdmin && !this.prmStatus) || (!this.state.disable)) ? {} : { display: 'none' }}></PrimaryButton>
             &nbsp;&nbsp;<PrimaryButton title="Close" text="Close" allowDisabledFocus onClick={() => { window.history.back(); }}></PrimaryButton>
           </div>

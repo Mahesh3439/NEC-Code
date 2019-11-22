@@ -56,7 +56,7 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
             Agency: null,
             pjtItem: {},
             showPanel: true,
-            spinner:false
+            spinner: false
 
         };
 
@@ -242,7 +242,7 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
             }
         }).then(async i => {
             console.log(i);
-           await this._submitData();
+            await this._submitData();
             if (this.delteItems.length > 0) {
                 await this._deleteItems();
             }
@@ -254,7 +254,7 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
         for (let dItem of this.delteItems) {
             await web.lists.getByTitle("Approvals").items.top(1).filter(`ApprovalID eq '${dItem}'`).get().then(async (items: any[]) => {
                 if (items.length > 0) {
-                   await web.lists.getByTitle("Approvals").items.getById(items[0].Id).delete().then(_ => { });
+                    await web.lists.getByTitle("Approvals").items.getById(items[0].Id).delete().then(_ => { });
                 }
             });
         }
@@ -267,7 +267,7 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
             });
     }
 
-    
+
     private _showPanel = () => {
         this.setState({ showPanel: true });
         //  ProjectApprovals._submitData();
@@ -322,11 +322,12 @@ export default class ProjectApprovals extends React.Component<IProjectApprovalsP
                     })}
 
                 </div>
-
-                <PrimaryButton
-                    text="Save"
-                    onClick={() => this.SaveData()}
-                ></PrimaryButton>
+                <div className="mtp btmp">
+                    <PrimaryButton
+                        text="Save"
+                        onClick={() => this.SaveData()}
+                    ></PrimaryButton>
+                </div>
 
                 {/* <DefaultButton
                     text="Cancel"></DefaultButton>                */}

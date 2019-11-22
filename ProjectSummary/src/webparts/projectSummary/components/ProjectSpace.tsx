@@ -156,8 +156,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                 });
             });
 
-
-
+            
 
         /**
           this.setState({
@@ -484,7 +483,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                 <div className="profile-info-row" style={this.state.items.ElectricityMW ? {} : { display: 'none' }}>
                                     <label className="blod">Electricity: </label>
                                     {this.state.items.ElectricityMW}
-                                    <label> &nbsp;MW</label>  &nbsp;  {this.state.items.ElectricityKW} <label> &nbsp;kVA</label>
+                                    <label> &nbsp;MW</label>  ;&nbsp;  {this.state.items.ElectricityKW} <label> &nbsp;kVA</label>
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.Water ? {} : { display: 'none' }}>
                                     <label className="blod">Water: </label>
@@ -509,7 +508,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                     {this.state.items.PotentialSaving}
                                 </div>
                                 <div className="profile-info-row" style={this.state.items.Other ? {} : { display: 'none' }}>
-                                    <label className="blod">Other : </label>
+                                    <label className="blod">Other: </label>
                                     {this.state.items.Other}
                                 </div>
 

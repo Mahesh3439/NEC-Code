@@ -58,6 +58,14 @@ export default class NecExtensionApplicationCustomizer
       // SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/NavContol.js`, {
       //   globalExportsName: 'getUserGroups'
       // });
+
+      if(!sessionStorage.getItem("loginuser"))
+      {
+        $("#O365_MainLink_Settings").parent().hide();
+      }
+        
+  
+
     }).catch((error) => {
 
     });
@@ -154,7 +162,7 @@ export default class NecExtensionApplicationCustomizer
     }
   } 
 
-  public async _getUserGroups(){
+  public async _getUserGroups(){  
 
     if(!sessionStorage.getItem("UserGroups")){
     const restApi = `${this.context.pageContext.web.absoluteUrl}/_api/web/currentuser/?$expand=groups`;
@@ -179,19 +187,22 @@ export default class NecExtensionApplicationCustomizer
     for (const uGroup of userGroups) {
       if(uGroup.Title=="IF Admin")
       {
-        document.getElementById('O365_MainLink_Settings').style.display = 'block';
-        document.getElementsByName("Submit Project")[0].style.display = "block";
+        //document.getElementById('O365_MainLink_Settings').style.display = 'inline-block !important';
+        document.getElementsByName("Submit a Project")[0].style.display = "block";
+        sessionStorage.setItem("loginuser","IF Admin");
         
         return false;
       }
       else if(uGroup.Title=="Investors")
-      {
-        document.getElementsByName("Submit Project")[0].style.display = "block";
+      {       
+        document.getElementsByName("Submit a Project")[0].style.display = "block";
+        document.getElementById('O365_MainLink_Settings').parentNode[0].style.display = 'none';
         return false;
       }
       else if(uGroup.Title=="Approval Agencies")
-      {
-        document.getElementsByName("Dashboard")[0].style.display = "block";
+      {       
+        document.getElementsByName("Agency Dashboard")[0].style.display = "block";    
+        document.getElementById('O365_MainLink_Settings').parentNode[0].style.display = 'none';    
         return false;
         
       }

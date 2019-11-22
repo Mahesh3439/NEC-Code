@@ -2,7 +2,7 @@ import * as React from 'react';
 import styles from './PromotionResponse.module.scss';
 import { IPromotionResponseProps, IPromotionResponseState, IErrorLog } from './IPromotionResponseProps';
 import { escape } from '@microsoft/sp-lodash-subset';
-import { Label, TextField, PrimaryButton, DefaultButton, DatePicker,Spinner } from 'office-ui-fabric-react/lib';
+import { Label, TextField, PrimaryButton, DefaultButton, DatePicker, Spinner } from 'office-ui-fabric-react/lib';
 import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 import { SPComponentLoader } from '@microsoft/sp-loader';
 //import * as $ from 'jquery';
@@ -45,22 +45,25 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
             PromotionType: null,
             listID: null,
             ItemId: null,
-            spinner:false,
-            disable:false
+            spinner: false,
+            disable: false
         };
 
         SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
             globalExportsName: 'jQuery'
-          }).catch((error) => {
-      
-          }).then(() => {
+        }).catch((error) => {
+
+        }).then(() => {
             SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.MultiFile.js`, {
-              globalExportsName: 'jQuery'
-            });           
-          }).catch((error) => {
-      
-          });
-        
+                globalExportsName: 'jQuery'
+            }).then(() => {
+                CustomJS.load();
+            }
+            );
+        }).catch((error) => {
+
+        });
+
         this.listFormService = new ListFormService(props.context.spHttpClient);
         this.PItemId = Number(window.location.search.split("PRID=")[1]);
 
@@ -72,7 +75,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                         items: response
                     });
 
-                   
+
                 });
         }
 
@@ -130,7 +133,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
         }
         bodyContent["Title"] = this.state.items.Title;
         bodyContent["PromotionIDId"] = this.PItemId;
-       // bodyContent["DeadlineDate"]=this.state.items.DeadlineDate;        
+        // bodyContent["DeadlineDate"]=this.state.items.DeadlineDate;        
         let body: string = JSON.stringify(bodyContent);
         return body;
     }
@@ -152,7 +155,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
         (document.getElementById("WarehousingRequirements") as HTMLInputElement).defaultValue = "";
         (document.getElementById("PotentialSaving") as HTMLInputElement).defaultValue = "";
         (document.getElementById("Other") as HTMLInputElement).defaultValue = "";
-        
+
         $("input").val("");
         $("textarea").val("");
     }
@@ -179,6 +182,11 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
         if (capital == "") {
             return alert("Please Enter Capital Expenditure");
         }
+
+        if ($("#Attachments input:file").length == 1) {
+            return alert("Please add Promotion Response Attachments");
+        }
+
         this._SaveData();
     }
 
@@ -186,75 +194,75 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
         this.setState({
             spinner: true
         });
-        try{
+        try {
 
-        var listTitle = null;
+            var listTitle = null;
 
-        if (this.state.items.PromotionType == "EOI")
-            listTitle = "EOI Responses";
-        else if (this.state.items.PromotionType == "RFPP")
-            listTitle = "RFPP Responses";
+            if (this.state.items.PromotionType == "EOI")
+                listTitle = "EOI Responses";
+            else if (this.state.items.PromotionType == "RFPP")
+                listTitle = "RFPP Responses";
 
-        this.listFormService._getListItemEntityTypeName(this.props.context, listTitle)
-            .then(listItemEntityTypeName => {
-                let vbody: string = this._getContentBody(listItemEntityTypeName);
-                return this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listTitle}')/items`, SPHttpClient.configurations.v1, {
-                    headers: {
-                        'Accept': 'application/json;odata=nometadata',
-                        'Content-type': 'application/json;odata=verbose',
-                        'odata-version': ''
-                    },
-                    body: vbody
-                });
-            }).then(async response => {
-                if (!response.ok) {
-                    const respText = await response.text();
-                    throw new Error(respText.toString());
-
-                }
-                else {
-                    return response.json();
-                }
-            })
-            .then((item) => {
-                console.log(item.Id);
-                let itemID = item.Id;
-                let attachemnts = $("#Attachments input:file");
-                if (attachemnts.length > 1) {
-                    var itemAttachments = [];
-                    $.each(attachemnts, function (index, attachment) {
-                        let afile = attachment as HTMLInputElement;
-                        if (afile.files.length > 0) {
-                            for (let index=0;afile.files.length>index;index++) {
-                                itemAttachments.push({
-                                    name: afile.files[index].name,
-                                    content: afile.files[index]
-                                });                                
-                            }                           
-                        }
+            this.listFormService._getListItemEntityTypeName(this.props.context, listTitle)
+                .then(listItemEntityTypeName => {
+                    let vbody: string = this._getContentBody(listItemEntityTypeName);
+                    return this.props.context.spHttpClient.post(`${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listTitle}')/items`, SPHttpClient.configurations.v1, {
+                        headers: {
+                            'Accept': 'application/json;odata=nometadata',
+                            'Content-type': 'application/json;odata=verbose',
+                            'odata-version': ''
+                        },
+                        body: vbody
                     });
-                    let siteURL = this.props.context.pageContext.web.absoluteUrl;
-                    let web = new Web(siteURL);
-                    let ListItem = web.lists.getByTitle(`${listTitle}`).items.getById(itemID);
-                    ListItem.attachmentFiles.addMultiple(itemAttachments)
-                        .then(r => {
-                            console.log(r);
-                            this.setState({
-                                spinner: false
-                            });
-                            alert("Response submitted successfully");
-                            window.location.href = `${this.props.context.pageContext.web.absoluteUrl}/SitePages/ProjectsonOffer.aspx`;
+                }).then(async response => {
+                    if (!response.ok) {
+                        const respText = await response.text();
+                        throw new Error(respText.toString());
+
+                    }
+                    else {
+                        return response.json();
+                    }
+                })
+                .then((item) => {
+                    console.log(item.Id);
+                    let itemID = item.Id;
+                    let attachemnts = $("#Attachments input:file");
+                    if (attachemnts.length > 1) {
+                        var itemAttachments = [];
+                        $.each(attachemnts, function (index, attachment) {
+                            let afile = attachment as HTMLInputElement;
+                            if (afile.files.length > 0) {
+                                for (let index = 0; afile.files.length > index; index++) {
+                                    itemAttachments.push({
+                                        name: afile.files[index].name,
+                                        content: afile.files[index]
+                                    });
+                                }
+                            }
                         });
+                        let siteURL = this.props.context.pageContext.web.absoluteUrl;
+                        let web = new Web(siteURL);
+                        let ListItem = web.lists.getByTitle(`${listTitle}`).items.getById(itemID);
+                        ListItem.attachmentFiles.addMultiple(itemAttachments)
+                            .then(r => {
+                                console.log(r);
+                                this.setState({
+                                    spinner: false
+                                });
+                                alert("Response submitted successfully");
+                                window.location.href = `${this.props.context.pageContext.web.absoluteUrl}/SitePages/ProjectsonOffer.aspx`;
+                            });
 
-                }
-                else {
-                    this.setState({
-                        spinner: false
-                    });
-                    alert("Response submitted successfully");
-                    window.location.href = `${this.props.context.pageContext.web.absoluteUrl}/SitePages/ProjectsonOffer.aspx`;
-                }
-            });
+                    }
+                    else {
+                        this.setState({
+                            spinner: false
+                        });
+                        alert("Response submitted successfully");
+                        window.location.href = `${this.props.context.pageContext.web.absoluteUrl}/SitePages/ProjectsonOffer.aspx`;
+                    }
+                });
         }
         catch (error) {
             this.errorLog = {
@@ -347,7 +355,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                                     underlined
                                                     placeholder="Products & Associated Quantity"
                                                     onBlur={this.handleChange.bind(this)}
-                                                    />
+                                                />
                                             </div>
 
                                             <div className="profile-info-name">Capital Expenditure <span style={{ color: "red" }}>*</span></div>
@@ -357,17 +365,17 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                         </div>
 
                                         <div className="profile-info-row">
-                                        <div className="profile-info-name">Port Requirement </div>
+                                            <div className="profile-info-name">Port Requirement </div>
                                             <div className="profile-info-value">
                                                 <TextField id="Port" label="" multiline rows={3} className="wd100" underlined onBlur={this.handleChange.bind(this)} />
                                             </div>
                                             <div className="profile-info-name">Natural Gas Usage</div>
                                             <div className="profile-info-value">
                                                 <TextField id="Naturalgas" className="wd100" underlined onBlur={this.handleChange.bind(this)} suffix="mmscf/d" />
-                                            </div>                                           
+                                            </div>
                                         </div>
                                         <div className="profile-info-row">
-                                        <div className="profile-info-name">Warehousing Requirement </div>
+                                            <div className="profile-info-name">Warehousing Requirement </div>
                                             <div className="profile-info-value">
                                                 <TextField id="WarehousingRequirements" multiline rows={3} className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} />
                                             </div>
@@ -375,10 +383,10 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                             <div className="profile-info-value">
                                                 <TextField type="text" id="ElectricityMW" className="Electricity ms-TextField-field wd100" underlined onBlur={this.handleChange.bind(this)} suffix="MW" />
                                                 <TextField type="text" id="ElectricityKW" className="Electricity ms-TextField-field wd100" underlined onBlur={this.handleChange.bind(this)} suffix="kVA" />
-                                            </div>  
+                                            </div>
                                         </div>
                                         <div className="profile-info-row">
-                                        <div className="profile-info-name">If Energy Efficient Project, Potential Savings </div>
+                                            <div className="profile-info-name">If Energy Efficiency Project, Potential Savings </div>
                                             <div className="profile-info-value">
                                                 <TextField id="PotentialSaving" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} />
                                             </div>
@@ -387,9 +395,9 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                                 <TextField id="Water" className="wd100" label="" underlined onBlur={this.handleChange.bind(this)} suffix="m³/d" />
                                             </div>
 
-                                          
+
                                         </div>
-                                        <div className="profile-info-row">                                          
+                                        <div className="profile-info-row">
                                             <div className="profile-info-name">Other </div>
                                             <div className="profile-info-value">
                                                 <TextField id="Other" label="" multiline rows={3} className="wd100" underlined onBlur={this.handleChange.bind(this)} />
@@ -403,13 +411,13 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                                 </div>
                             </div>
                         </div>
-                    
-                    
+
+
                     </div>
 
 
-                    <div className="profile-info-row" style={{margin:"5px",display:"inline-table"}}>
-                    <div className="profile-info-name" style={{color:"black",font:"bold"}}>Promotion Response Attachments </div>
+                    <div className="profile-info-row" style={{ margin: "5px", display: "inline-table" }}>
+                        <div className="profile-info-name" style={{ color: "black", font: "bold" }}>Promotion Response Attachments </div>
                         <div id='txtAttachemtns' style={{ margin: "5px" }}>
                             <input name="files[]" id='Attachments' type='file' className='multi with-preview' multiple></input>
                         </div>
@@ -420,7 +428,7 @@ export default class PromotionResponseNew extends React.Component<IPromotionResp
                 <div>
 
 
-                    <div className={styles.pullright}>
+                    <div className="pull-right mtp btmp">
                         <PrimaryButton title="Clear" text="Clear" allowDisabledFocus onClick={() => window.location.reload()}></PrimaryButton>
                         &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>
                         &nbsp;&nbsp;<PrimaryButton title="Close" text="Close" allowDisabledFocus href={this.props.context.pageContext.web.absoluteUrl}></PrimaryButton>
