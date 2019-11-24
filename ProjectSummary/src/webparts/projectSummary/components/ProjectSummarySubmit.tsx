@@ -263,7 +263,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                         page: window.location.href,
                         Module: "Attachments save",
                         exception: err
-                    }
+                    };
 
                     await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
                     this.setState({
@@ -316,7 +316,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 page: window.location.href,
                 Module: "Data Save",
                 exception: error
-            }
+            };
 
             await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
             this.setState({
@@ -385,7 +385,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             context: this.props.context,
             httpReuest: this.props.httpRequest
 
-        }
+        };
         this.listFormService._creatProjectSpace(this.crtSpace)
             .then((responseJSON) => {
                 this.fields.push("ProjectURL");

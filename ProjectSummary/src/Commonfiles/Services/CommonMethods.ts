@@ -166,7 +166,7 @@ export class ListFormService implements IListFormService {
         page: window.location.href,
         Module: "Project Space",
         exception: error
-      }
+      };
       await this._logError(crtSpace.context.pageContext.site.absoluteUrl, errorLog);
 
     }
@@ -191,7 +191,7 @@ export class ListFormService implements IListFormService {
     let Liaison = _vSiteGroups.Liaison;
     let Agency = _vSiteGroups.Agency;
 
-    let invRollDef: number = 1073741926;
+    let invRollDef: number = siteURL.toUpperCase().indexOf("_DEV") > -1 ? 1073741827 : 1073741926;
 
 
     //Assigning existing groups to Project Space
@@ -202,21 +202,21 @@ export class ListFormService implements IListFormService {
     web.roleAssignments.add(investor, invRollDef);
 
     web.lists.getByTitle("Documents")
-    .rootFolder
-    .folders
-    .add("Project Summary").then(async function(data) {
+      .rootFolder
+      .folders
+      .add("Project Summary").then(async function (data) {
 
-      let folderURL = `${siteURL}/Shared%20Documents/Project%20Summary`;
-      let summaryFolder = web.getFolderByServerRelativeUrl(folderURL);
-      let folder = await summaryFolder.getItem();
-      await folder.breakRoleInheritance(false);
-      await folder.roleAssignments.add(Agency, 1073741827);
-      await folder.roleAssignments.add(Liaison, 1073741829);
-      await folder.roleAssignments.add(IFAdmin, 1073741827);
-        
-    }).catch(function(err) {
-        console.log(err);        
-    });
+        let folderURL = `${siteURL}/Shared%20Documents/Project%20Summary`;
+        let summaryFolder = web.getFolderByServerRelativeUrl(folderURL);
+        let folder = await summaryFolder.getItem();
+        await folder.breakRoleInheritance(false);
+        await folder.roleAssignments.add(Agency, 1073741827);
+        await folder.roleAssignments.add(Liaison, 1073741829);
+        await folder.roleAssignments.add(IFAdmin, 1073741827);
+
+      }).catch(function (err) {
+        console.log(err);
+      });
 
 
     let Approvals = web.lists.getByTitle("Approvals");
@@ -278,7 +278,7 @@ export class ListFormService implements IListFormService {
         component: "Common Method",
         page: "",
         exception: error.toString()
-      }
+      };
       this._logError(siteURL, errorLog);
 
     });

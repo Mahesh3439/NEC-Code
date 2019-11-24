@@ -25,6 +25,14 @@
           "manifest": "./src/extensions/necExtension/NecExtensionApplicationCustomizer.manifest.json"
         }
       ]
+    },
+    "site-content-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/siteContent/SiteContentWebPart.js",
+          "manifest": "./src/webparts/siteContent/SiteContentWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {
@@ -53,7 +61,6 @@
         "sp-runtime"
       ]
     },
-    
     "MultiFile": {
       "path": "./src/Commonfiles/Services/jquery.MultiFile.js",
       "globalName": "jQuery"
@@ -67,6 +74,7 @@
     "ProjectSummaryWebPartStrings": "lib/webparts/projectSummary/loc/{locale}.js",
     "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js",
     "PromotionResponseWebPartStrings": "lib/webparts/promotionResponse/loc/{locale}.js",
-    "NecExtensionApplicationCustomizerStrings": "lib/extensions/necExtension/loc/{locale}.js"
+    "NecExtensionApplicationCustomizerStrings": "lib/extensions/necExtension/loc/{locale}.js",
+    "SiteContentWebPartStrings": "lib/webparts/siteContent/loc/{locale}.js"
   }
 }

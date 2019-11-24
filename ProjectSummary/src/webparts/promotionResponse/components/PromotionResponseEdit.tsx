@@ -307,7 +307,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
             context:this.props.context,
             httpReuest:this.props.httpRequest
 
-        }
+        };
           this.listFormService._creatProjectSpace(this.crtSpace)
             .then((responseJSON) => {
               this.setState({
@@ -381,7 +381,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
         page: window.location.href,
         Module: "Data Save",
         exception: error
-      }
+      };
 
       await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
       this.setState({
@@ -418,7 +418,7 @@ export default class PromotionResponseEdit extends React.Component<IPromotionRes
           page: window.location.href,
           Module: "Data updating",
           exception: error
-        }
+        };
 
         await this.listFormService._logError(this.props.context.pageContext.site.absoluteUrl, this.errorLog);
         this.setState({

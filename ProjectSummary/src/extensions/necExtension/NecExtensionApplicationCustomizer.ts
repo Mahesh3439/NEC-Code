@@ -18,6 +18,7 @@ import { sp } from "@pnp/sp";
 
 import { SPComponentLoader } from '@microsoft/sp-loader';
 import { SPHttpClient } from '@microsoft/sp-http';
+import { IconButton } from 'office-ui-fabric-react';
 require('sp-init');
 require('microsoft-ajax');
 require('sp-runtime');
@@ -44,7 +45,7 @@ export default class NecExtensionApplicationCustomizer
   private _footerPlaceholder: PlaceholderContent;
 
   @override
-  public onInit(): Promise<void> {    
+  public onInit(): Promise<void> {
     SPComponentLoader.loadCss(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/GlobalCSS.css`);
 
     SPComponentLoader.loadScript(`${this.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
@@ -59,12 +60,12 @@ export default class NecExtensionApplicationCustomizer
       //   globalExportsName: 'getUserGroups'
       // });
 
-      if(!sessionStorage.getItem("loginuser"))
-      {
+      if (!sessionStorage.getItem("loginuser")) {
         $("#O365_MainLink_Settings").parent().hide();
+        $(".SiteContent").hide()
       }
-        
-  
+
+
 
     }).catch((error) => {
 
@@ -73,11 +74,15 @@ export default class NecExtensionApplicationCustomizer
     this.context.placeholderProvider.changedEvent.add(this, () => {
       this._renderPlaceHolders();
       this._getUserGroups();
+      if (!sessionStorage.getItem("loginuser")) {
+        this._validateUser();
+      }
+
     });
 
     // this.context.application.navigatedEvent.add(this,async ()=>{
     //   await this._getUserGroups();
-     
+
     // });
 
     return Promise.resolve();
@@ -99,7 +104,7 @@ export default class NecExtensionApplicationCustomizer
         console.error('The expected placeholder (Top) was not found.');
         return;
       }
-     
+
       if (this.properties) {
         if (this._headerPlaceholder.domElement) {
           this._headerPlaceholder.domElement.innerHTML = `          
@@ -118,13 +123,18 @@ export default class NecExtensionApplicationCustomizer
                   <div class="login-logo">
                     <img src="${this.context.pageContext.site.absoluteUrl}/SiteAssets/SiteImages/NECLogo.png" alt="" >
                   </div>
-              </li>
+              </li>               
+             
 					</ul>
 				</div>  
          
+        <a class="SiteContent" title="SiteContent" href="${this.context.pageContext.site.absoluteUrl}/sitepages/sitecontent.aspx" class="ms-Button ms-Button--primary " data-is-focusable="true">
+        <div class="ms-Button-flexContainer"><div class="ms-Button-textContainer"><div class="ms-Button-label label-236">Site Content</div></div></div>
+        </a>
+
          </div>
           `;
-          
+
         }
       }
     }
@@ -160,53 +170,61 @@ export default class NecExtensionApplicationCustomizer
       }
 
     }
-  } 
+  }
 
-  public async _getUserGroups(){  
+  public async _getUserGroups() {
 
-    if(!sessionStorage.getItem("UserGroups")){
-    const restApi = `${this.context.pageContext.web.absoluteUrl}/_api/web/currentuser/?$expand=groups`;
-    await this.context.spHttpClient.get(restApi, SPHttpClient.configurations.v1)
-      .then(resp => { return resp.json(); })
-      .then((data)=>
-      {
-        sessionStorage.setItem("UserGroups",JSON.stringify(data.Groups));
-        this._ControlNavigation();
-      });
+    if (!sessionStorage.getItem("UserGroups")) {
+      const restApi = `${this.context.pageContext.web.absoluteUrl}/_api/web/currentuser/?$expand=groups`;
+      await this.context.spHttpClient.get(restApi, SPHttpClient.configurations.v1)
+        .then(resp => { return resp.json(); })
+        .then((data) => {
+          sessionStorage.setItem("UserGroups", JSON.stringify(data.Groups));
+          this._ControlNavigation();
+        });
     }
-    else{
+    else {
       this._ControlNavigation();
-    }   
+    }
 
   }
 
-  public _ControlNavigation()
-  {
+  public _ControlNavigation() {
     let userGroups = JSON.parse(sessionStorage.getItem("UserGroups"));
 
     for (const uGroup of userGroups) {
-      if(uGroup.Title=="IF Admin")
-      {
+      if (uGroup.Title == "IF Admin") {
         //document.getElementById('O365_MainLink_Settings').style.display = 'inline-block !important';
         document.getElementsByName("Submit a Project")[0].style.display = "block";
-        sessionStorage.setItem("loginuser","IF Admin");
-        
+        sessionStorage.setItem("loginuser", "IF Admin");
+
         return false;
       }
-      else if(uGroup.Title=="Investors")
-      {       
+      else if (uGroup.Title == "Investors") {
         document.getElementsByName("Submit a Project")[0].style.display = "block";
         document.getElementById('O365_MainLink_Settings').parentNode[0].style.display = 'none';
         return false;
       }
-      else if(uGroup.Title=="Approval Agencies")
-      {       
-        document.getElementsByName("Agency Dashboard")[0].style.display = "block";    
-        document.getElementById('O365_MainLink_Settings').parentNode[0].style.display = 'none';    
+      else if (uGroup.Title == "Approval Agencies") {
+        document.getElementsByName("Agency Dashboard")[0].style.display = "block";
+        document.getElementById('O365_MainLink_Settings').parentNode[0].style.display = 'none';
         return false;
-        
+
       }
     }
+  }
+
+  private _validateUser() {
+    let pageContex = this.context.pageContext.legacyPageContext;
+    let listTitle = pageContex.listTitle;
+    let pageURL = pageContex.serverRequestPath;
+
+    if (pageURL.indexOf('/Lists') > 0 || pageURL.indexOf('/Forms') > 0) {
+      window.location.href = this.context.pageContext.web.absoluteUrl;
+    }
+
+
+
   }
 
 }

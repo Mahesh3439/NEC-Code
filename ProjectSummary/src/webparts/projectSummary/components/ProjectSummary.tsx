@@ -231,7 +231,7 @@ export default class ProjectSummary extends React.Component<IProjectSummaryProps
       '__metadata': {
         'type': listItemEntityTypeName
       },
-    }
+    };
 
     for (let id of _fields) {
       if (id == "ProposedStartDate-label") {

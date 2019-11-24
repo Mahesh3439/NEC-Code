@@ -127,6 +127,8 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                     }
                 }));
             });
+         
+
 
         const listrestApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Projects')`;
         this.listFormService._getListItem(this.props.context, listrestApi)
@@ -336,7 +338,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                 context: this.props.context,
                 httpReuest: this.props.httpRequest
 
-            }
+            };
 
             this.listFormService._creatProjectSpace(this.crtSpace)
                 .then((responseJSON) => {

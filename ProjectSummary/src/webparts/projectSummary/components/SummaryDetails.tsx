@@ -307,7 +307,7 @@ export default class SummaryDetails extends React.Component<IProjectSummaryProps
                     }
 
                     <div className={styles.pullright}>
-                        &nbsp;&nbsp;<PrimaryButton title="Back" text="Back" allowDisabledFocus onClick={()=>{window.history.back()}}></PrimaryButton>
+                        &nbsp;&nbsp;<PrimaryButton title="Back" text="Back" allowDisabledFocus onClick={()=>{window.history.back();}}></PrimaryButton>
                     </div>
 
                 </div>
