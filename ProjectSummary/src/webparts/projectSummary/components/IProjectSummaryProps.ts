@@ -65,6 +65,8 @@ export interface IListItem {
   StageStartDate?:string;
   ReqAction?:string;
   InvestorId?:number;
+  Comment?:string;
+  ProjectStatus?:string;
 }
 
 

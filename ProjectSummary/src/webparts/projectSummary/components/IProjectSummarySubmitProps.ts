@@ -53,6 +53,8 @@ export interface IListItem {
   ElectricityMW?: string;
   ElectricityKW?: string;
   ProjectURL?:string;
+  Comment?:string;
+  ProjectStatus?:string;
 }
 
 

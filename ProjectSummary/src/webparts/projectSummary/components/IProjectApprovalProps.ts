@@ -69,6 +69,7 @@ export interface IProjectListItem {
   StageStartDate?:string;
   InvestorId?:string;
   ApprovalsId?:any[];
+  ProjectStatus?:string;
 }
 
 

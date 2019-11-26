@@ -181,6 +181,7 @@ export class ListFormService implements IListFormService {
        * roleDefId -- 1073741829 -- FullControl
        * roleDefId -- 1073741830 -- Edit
        * roleDefId -- 1073741827 -- Contribute
+       * roleDefId -- 1073741826 -- Read
        */
 
   public async _assigneUser(_vSiteGroups: IGroups, siteURL: string, investor: number) {
@@ -199,28 +200,28 @@ export class ListFormService implements IListFormService {
     web.roleAssignments.add(Liaison, 1073741827);
     //Assigning access to the Investor with contribute rights.
     //UserId and roleDefId
-    web.roleAssignments.add(investor, invRollDef);
+    web.roleAssignments.add(investor, invRollDef);   
 
-    web.lists.getByTitle("Documents")
-      .rootFolder
-      .folders
-      .add("Project Summary").then(async function (data) {
-
-        let folderURL = `${siteURL}/Shared%20Documents/Project%20Summary`;
+        let folderURL = `${siteURL}/Shared%20Documents/ProjectSummary.pdf`;
         let summaryFolder = web.getFolderByServerRelativeUrl(folderURL);
         let folder = await summaryFolder.getItem();
-        await folder.breakRoleInheritance(false);
-        await folder.roleAssignments.add(Agency, 1073741827);
+        await folder.breakRoleInheritance(false);        
+        await folder.roleAssignments.add(Agency, 1073741826);
         await folder.roleAssignments.add(Liaison, 1073741829);
         await folder.roleAssignments.add(IFAdmin, 1073741827);
 
-      }).catch(function (err) {
-        console.log(err);
-      });
+     
 
 
     let Approvals = web.lists.getByTitle("Approvals");
     let issues = web.lists.getByTitle("Issues");
+    let sitePages = web.lists.getByTitle("Site Pages")
+
+    await sitePages.breakRoleInheritance(false);   
+    sitePages.roleAssignments.add(Liaison, 1073741829);
+    sitePages.roleAssignments.add(IFAdmin, 1073741827);
+    sitePages.roleAssignments.add(investor, invRollDef);
+
 
 
     let sitePage: string[] = [`${siteURL}/SitePages/ViewIssue.aspx`, `${siteURL}/SitePages/EditApprovalInfo.aspx`, `${siteURL}/SitePages/Roadmap.aspx`];

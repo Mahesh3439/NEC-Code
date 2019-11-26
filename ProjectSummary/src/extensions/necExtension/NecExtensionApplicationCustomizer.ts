@@ -201,16 +201,9 @@ export default class NecExtensionApplicationCustomizer
         return false;
       }
       else if (uGroup.Title == "Investors") {
-        document.getElementsByName("Submit a Project")[0].style.display = "block";
-        document.getElementById('O365_MainLink_Settings').parentNode[0].style.display = 'none';
+        document.getElementsByName("Submit a Project")[0].style.display = "block";        
         return false;
-      }
-      else if (uGroup.Title == "Approval Agencies") {
-        document.getElementsByName("Agency Dashboard")[0].style.display = "block";
-        document.getElementById('O365_MainLink_Settings').parentNode[0].style.display = 'none';
-        return false;
-
-      }
+      }      
     }
   }
 
@@ -219,12 +212,9 @@ export default class NecExtensionApplicationCustomizer
     let listTitle = pageContex.listTitle;
     let pageURL = pageContex.serverRequestPath;
 
-    if (pageURL.indexOf('/Lists') > 0 || pageURL.indexOf('/Forms') > 0) {
+    if ((pageURL.indexOf('/Lists') > 0 || pageURL.indexOf('/Forms') > 0) && pageURL.indexOf('ProjectSummary') == -1) {
       window.location.href = this.context.pageContext.web.absoluteUrl;
     }
-
-
-
   }
 
 }

@@ -156,7 +156,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                 });
             });
 
-            
+
 
         /**
           this.setState({
@@ -233,8 +233,11 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
             bodyContent["LiaisonOfficerId"] = this.liaisonofficer;
             bodyContent["LiaisonFlag"] = true;
         }
-        if (this.state.Stage !== null)
+        if (this.state.Stage !== null && this.state.Stage !== 9)
             bodyContent["ProjectStatus"] = $('#StageId span')[0].textContent + "-" + $('#ActivityId span')[0].textContent;
+        else {
+            bodyContent["ProjectStatus"] = "Closed";
+        }
 
         bodyContent["sendEmail"] = true;
         let body: string = JSON.stringify(bodyContent);
@@ -310,7 +313,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                     this.setState({
                         spinner: false
                     });
-    
+
                     window.location.href = this.props.context.pageContext.web.absoluteUrl;
 
                 });
@@ -369,7 +372,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                                 defaultSelectedKey={this.state.Stage}
                                                 placeholder="Select Stage"
                                                 label=''
-                                                disabled={(this.state.isAdmin || this.state.isLiaison) ? false : true}
+                                                disabled={(this.state.isAdmin || this.state.isLiaison || this.state.items.ProjectStatus !== "Closed") ? false : true}
                                                 options={this.state.Stages.map((item: any) => { return { key: item.ID, text: item.Title }; })}
                                                 onChange={this._getChanges.bind(this, "Step")}
                                             />
@@ -382,7 +385,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                                 defaultSelectedKey={this.state.Activity}
                                                 placeholder="Select Activity"
                                                 label=''
-                                                disabled={(this.state.isAdmin || this.state.isLiaison) ? false : true}
+                                                disabled={(this.state.isAdmin || this.state.isLiaison || this.state.items.ProjectStatus !== "Closed") ? false : true}
                                                 options={this.state.Activities.map((item: any) => { return { key: item.ID, text: item.Title }; })}
                                                 onChange={this._getChanges.bind(this, "Activity")}
                                             />
@@ -417,7 +420,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                                 principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
                                                 resolveDelay={1500}
                                                 defaultSelectedUsers={[`${this.state.liaisonEmail}`]}
-                                                disabled={this.state.isAdmin ? false : true} />
+                                                disabled={(this.state.isAdmin || this.state.items.ProjectStatus !== "Closed") ? false : true} />
                                         </div>
                                     </div>
 
@@ -432,14 +435,14 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                     <div className="profile-info-row">
                                         <div className="profile-info-name">Comments</div>
                                         <div className="profile-info-value">
-                                            <TextField id="Comments" underlined placeholder="Comments" label="" multiline rows={3} onBlur={this.handleChange.bind(this)} />
+                                            <TextField id="Comments" underlined placeholder="Comments" label="" disabled={this.state.items.ProjectStatus !== "Closed" ? false : true} multiline rows={3} onBlur={this.handleChange.bind(this)} />
                                         </div>
                                     </div>
 
                                     <div className="profile-info-row">
                                         <div className="profile-info-name">Required Action</div>
                                         <div className="profile-info-value">
-                                            <TextField id="ReqAction" underlined label="" onBlur={this.handleChange.bind(this)} disabled={(this.state.isAdmin || this.state.isLiaison) ? false : true} value={this.state.items.ReqAction} />
+                                            <TextField id="ReqAction" underlined label="" onBlur={this.handleChange.bind(this)} disabled={(this.state.isAdmin || this.state.isLiaison || this.state.items.ProjectStatus !== "Closed") ? false : true} value={this.state.items.ReqAction} />
                                         </div>
                                     </div>
 
@@ -517,7 +520,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                     </div>
                 </div>
 
-                <div className="pull-right mtp">
+                <div className="pull-right mtp" style={this.state.items.ProjectStatus !== "Closed" ? {} : { display: 'none' }}>
                     <PrimaryButton title="Approvals" text="Approvals" allowDisabledFocus onClick={() => this._showPanel()} style={(this.state.Stage == 7 && (this.state.isAdmin || this.state.isLiaison)) ? {} : { display: 'none' }}></PrimaryButton>
                     {/* <PrimaryButton title="Approvals" text="Approvals" allowDisabledFocus onClick={() => function () { window.open(`${this.props.context.page.web.absoluteUrl}/sitepages/Approvals.asapx`, '_blank'); }}></PrimaryButton>} */}
                     &nbsp;&nbsp;<PrimaryButton title="Submit" text="Submit" onClick={() => this._submitform()}></PrimaryButton>

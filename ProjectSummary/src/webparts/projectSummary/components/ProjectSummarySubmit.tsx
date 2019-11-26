@@ -175,6 +175,12 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 }
 
             }
+            else if(id == "Comments")
+            {
+                let value = (document.getElementById(id) as HTMLInputElement).value.toString().trim();
+                bodyContent["Comments"] = value;
+                bodyContent["Comment"] = value;
+            }
             else {
                 let value = (document.getElementById(id) as HTMLInputElement).value.toString().trim();
                 bodyContent[id] = value;

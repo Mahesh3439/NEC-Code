@@ -127,7 +127,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                     }
                 }));
             });
-         
+
 
 
         const listrestApi = `${this.props.context.pageContext.web.absoluteUrl}/_api/web/lists/GetByTitle('Projects')`;
@@ -217,6 +217,11 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
             }
             else if (id == "ProjectURL")
                 bodyContent["ProjectURL"] = this.state.pjtSpace;
+            else if (id == "Comments") {
+                let value = (document.getElementById(id) as HTMLInputElement).value.toString().trim();
+                bodyContent["Comments"] = value;
+                bodyContent["Comment"] = value;
+            }
             else {
                 let value = (document.getElementById(id) as HTMLInputElement).value;
                 bodyContent[id] = value;
@@ -538,7 +543,7 @@ export default class ProjectSummaryUpdate extends React.Component<IProjectSummar
                                         <div className="profile-info-row">
                                             <div className="profile-info-name">Latest Comments</div>
                                             <div className="profile-info-value">
-                                                <TextField label="" readOnly multiline rows={3} disabled value={this.state.items.Comments} />
+                                                <TextField label="" readOnly multiline rows={3} disabled value={this.state.items.Comment} />
                                             </div>
                                         </div>
 
