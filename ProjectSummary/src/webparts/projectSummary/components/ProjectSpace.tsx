@@ -233,12 +233,16 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
             bodyContent["LiaisonOfficerId"] = this.liaisonofficer;
             bodyContent["LiaisonFlag"] = true;
         }
-        if (this.state.Stage !== null && this.state.Stage !== 9)
-            bodyContent["ProjectStatus"] = $('#StageId span')[0].textContent + "-" + $('#ActivityId span')[0].textContent;
-        else {
+        if (this.state.Stage !== null && this.state.Stage !== 9) {
+            let Stage = $('#StageId span')[0].textContent;
+            let Activity = $('#ActivityId span')[0].textContent !== "Select Activity" ? ("-" + $('#ActivityId span')[0].textContent) : "";
+            bodyContent["ProjectStatus"] = Stage + Activity;
+        } else if (this.state.Stage !== null) {
             bodyContent["ProjectStatus"] = "Closed";
         }
 
+        let vComment = (document.getElementById("Comments") as HTMLInputElement).value.toString().trim();
+        bodyContent["Comment"] = vComment;
         bodyContent["sendEmail"] = true;
         let body: string = JSON.stringify(bodyContent);
         return body;
@@ -372,7 +376,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                                 defaultSelectedKey={this.state.Stage}
                                                 placeholder="Select Stage"
                                                 label=''
-                                                disabled={(this.state.isAdmin || this.state.isLiaison || this.state.items.ProjectStatus !== "Closed") ? false : true}
+                                                disabled={((this.state.isAdmin || this.state.isLiaison) && this.state.items.ProjectStatus !== "Closed") ? false : true}
                                                 options={this.state.Stages.map((item: any) => { return { key: item.ID, text: item.Title }; })}
                                                 onChange={this._getChanges.bind(this, "Step")}
                                             />
@@ -385,7 +389,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                                 defaultSelectedKey={this.state.Activity}
                                                 placeholder="Select Activity"
                                                 label=''
-                                                disabled={(this.state.isAdmin || this.state.isLiaison || this.state.items.ProjectStatus !== "Closed") ? false : true}
+                                                disabled={((this.state.isAdmin || this.state.isLiaison) && this.state.items.ProjectStatus !== "Closed") ? false : true}
                                                 options={this.state.Activities.map((item: any) => { return { key: item.ID, text: item.Title }; })}
                                                 onChange={this._getChanges.bind(this, "Activity")}
                                             />
@@ -420,7 +424,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                                 principalTypes={[PrincipalType.User, PrincipalType.SharePointGroup]}
                                                 resolveDelay={1500}
                                                 defaultSelectedUsers={[`${this.state.liaisonEmail}`]}
-                                                disabled={(this.state.isAdmin || this.state.items.ProjectStatus !== "Closed") ? false : true} />
+                                                disabled={(this.state.isAdmin && this.state.items.ProjectStatus !== "Closed") ? false : true} />
                                         </div>
                                     </div>
 
@@ -428,7 +432,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
                                     <div className="profile-info-row">
                                         <div className="profile-info-name">Latest Comments</div>
                                         <div className="profile-info-value">
-                                            <TextField label="" multiline rows={3} onBlur={this.handleChange.bind(this)} disabled value={this.state.items.Comments} />
+                                            <TextField label="" multiline rows={3} onBlur={this.handleChange.bind(this)} disabled value={this.state.items.Comment} />
                                         </div>
                                     </div>
 
@@ -529,7 +533,7 @@ export default class ProjectSpace extends React.Component<IProjectSummaryProps, 
 
                 {/* <div className={styles.row}>
             <PrimaryButton text="Submit"
-                           onClick={this._submitform.bind(this)}></PrimaryButton>
+                           onClick={this._submitform.bind(this)}></PrimaryButton>s
         </div> */}
 
 

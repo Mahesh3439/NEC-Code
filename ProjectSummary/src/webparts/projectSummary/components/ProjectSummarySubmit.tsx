@@ -70,6 +70,23 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
 
 
 
+        SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
+            globalExportsName: 'jQuery'
+        }).catch((error) => {
+
+        }).then(() => {
+            SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.MultiFile.js`, {
+                globalExportsName: 'jQuery'
+            }).then(() => {
+                CustomJS.load();
+            }
+            );
+        }).catch((error) => {
+
+        });
+
+
+
         this.listFormService = new ListFormService(props.context.spHttpClient);
         this._getProjectActions();
 
@@ -359,10 +376,16 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
         }
 
         if (this.state.isAdmin) {
-            if (this.props.context.pageContext.user.email == $(".ms-Persona-secondaryText")[0].textContent) {
-                alert("Admin can't be an Investor, please select correct investor");
+            if(this.investor == null)
+            {
+                alert("Please check Investor details, Investor is Empty OR Admin can't be an Investor");
                 return false;
             }
+            // if (this.props.context.pageContext.user.email == $(".ms-Persona-secondaryText")[0].textContent) {
+            //     alert("Admin can't be an Investor, please select correct investor");
+            //     return false;
+            // }
+          
         }
 
         this.SaveData()
@@ -572,7 +595,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                         <div className="profile-info-row" style={(this.state.isAdmin) ? {} : { display: 'none' }}>
                                             <div className="profile-info-name">Investor</div>
                                             <div className="profile-info-value">
-                                                <PeoplePicker context={this.props.context}
+                                                <PeoplePicker context={this.props.context}                                                
                                                     titleText=""
                                                     personSelectionLimit={1}
                                                     groupName={""}

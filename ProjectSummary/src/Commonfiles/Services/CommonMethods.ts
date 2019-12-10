@@ -197,7 +197,7 @@ export class ListFormService implements IListFormService {
 
     //Assigning existing groups to Project Space
     web.roleAssignments.add(IFAdmin, 1073741829);
-    web.roleAssignments.add(Liaison, 1073741827);
+    web.roleAssignments.add(Liaison, 1073741829);
     //Assigning access to the Investor with contribute rights.
     //UserId and roleDefId
     web.roleAssignments.add(investor, invRollDef);   
@@ -210,19 +210,20 @@ export class ListFormService implements IListFormService {
         await folder.roleAssignments.add(Liaison, 1073741829);
         await folder.roleAssignments.add(IFAdmin, 1073741827);
 
-     
-
-
     let Approvals = web.lists.getByTitle("Approvals");
     let issues = web.lists.getByTitle("Issues");
-    let sitePages = web.lists.getByTitle("Site Pages")
+    let sitePages = web.lists.getByTitle("Site Pages");
+    let Discussions = web.lists.getByTitle("Discussions");
 
     await sitePages.breakRoleInheritance(false);   
     sitePages.roleAssignments.add(Liaison, 1073741829);
     sitePages.roleAssignments.add(IFAdmin, 1073741827);
-    sitePages.roleAssignments.add(investor, invRollDef);
+    sitePages.roleAssignments.add(investor, 1073741826);
 
-
+    await Discussions.breakRoleInheritance(false);   
+    Discussions.roleAssignments.add(Liaison, 1073741829);
+    Discussions.roleAssignments.add(IFAdmin, 1073741829);
+    Discussions.roleAssignments.add(investor, invRollDef);
 
     let sitePage: string[] = [`${siteURL}/SitePages/ViewIssue.aspx`, `${siteURL}/SitePages/EditApprovalInfo.aspx`, `${siteURL}/SitePages/Roadmap.aspx`];
     for (let pageURL of sitePage) {
@@ -230,23 +231,23 @@ export class ListFormService implements IListFormService {
       let getPage = web.getFileByServerRelativeUrl(pageURL);
       let page = await getPage.getItem();
       await page.breakRoleInheritance(false);
-      await page.roleAssignments.add(Agency, 1073741827);
+      await page.roleAssignments.add(Agency, 1073741826);
       await page.roleAssignments.add(Liaison, 1073741829);
       await page.roleAssignments.add(IFAdmin, 1073741827);
-      await page.roleAssignments.add(investor, invRollDef);
+      await page.roleAssignments.add(investor, 1073741826);
     }
 
     /**
    * Breaking inheritance and assigning access to IF Admin, investor,liaison and Approval Agencys
    */
     await Approvals.breakRoleInheritance(false);
-    Approvals.roleAssignments.add(Agency, 1073741827);
+    Approvals.roleAssignments.add(Agency, 1073741826);
     Approvals.roleAssignments.add(Liaison, 1073741829);
     Approvals.roleAssignments.add(IFAdmin, 1073741827);
     Approvals.roleAssignments.add(investor, invRollDef);
 
     await issues.breakRoleInheritance(false);
-    issues.roleAssignments.add(Agency, 1073741827);
+    issues.roleAssignments.add(Agency, 1073741826);
     issues.roleAssignments.add(Liaison, 1073741829);
     issues.roleAssignments.add(IFAdmin, 1073741827);
     issues.roleAssignments.add(investor, invRollDef);
