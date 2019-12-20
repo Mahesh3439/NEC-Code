@@ -70,27 +70,29 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
 
 
 
-        SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
-            globalExportsName: 'jQuery'
-        }).catch((error) => {
+        // SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.js`, {
+        //     globalExportsName: 'jQuery'
+        // }).catch((error) => {
 
-        }).then(() => {
-            SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.MultiFile.js`, {
-                globalExportsName: 'jQuery'
-            }).then(() => {
-                CustomJS.load();
-            }
-            );
-        }).catch((error) => {
+        // }).then(() => {
+        //     SPComponentLoader.loadScript(`${this.props.context.pageContext.site.absoluteUrl}/SiteAssets/jquery.MultiFile.js`, {
+        //         globalExportsName: 'jQuery'
+        //     }).then(() => {
+        //         CustomJS.load();
+        //     }
+        //     );
+        // }).catch((error) => {
 
-        });
+        // });
 
+
+       
 
 
         this.listFormService = new ListFormService(props.context.spHttpClient);
         this._getProjectActions();
 
-
+     
         this.listFormService._getloginusergroups(this.props.context)
             .then((response) => {
                 response.Groups.map(((item: any, inc) => {
@@ -103,8 +105,8 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 }));
             }).then(() => {
                 CustomJS.load();
-            });  
-            
+            });
+
     }
 
     //Method to convert single line text to multy line field in html.
@@ -192,8 +194,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                 }
 
             }
-            else if(id == "Comments")
-            {
+            else if (id == "Comments") {
                 let value = (document.getElementById(id) as HTMLInputElement).value.toString().trim();
                 bodyContent["Comments"] = value;
                 bodyContent["Comment"] = value;
@@ -260,12 +261,12 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             $.each(attachemnts, function (index, file) {
                 let afile = file as HTMLInputElement;
                 if (afile.files.length > 0) {
-                    for (let index=0;afile.files.length>index;index++) {
+                    for (let index = 0; afile.files.length > index; index++) {
                         itemAttachments.push({
                             name: afile.files[index].name,
                             content: afile.files[index]
-                        });                                
-                    }    
+                        });
+                    }
                 }
             });
 
@@ -376,8 +377,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
         }
 
         if (this.state.isAdmin) {
-            if(this.investor == null)
-            {
+            if (this.investor == null) {
                 alert("Please check Investor details, Investor is Empty OR Admin can't be an Investor");
                 return false;
             }
@@ -385,7 +385,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
             //     alert("Admin can't be an Investor, please select correct investor");
             //     return false;
             // }
-          
+
         }
 
         this.SaveData()
@@ -595,7 +595,7 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                                         <div className="profile-info-row" style={(this.state.isAdmin) ? {} : { display: 'none' }}>
                                             <div className="profile-info-name">Investor</div>
                                             <div className="profile-info-value">
-                                                <PeoplePicker context={this.props.context}                                                
+                                                <PeoplePicker context={this.props.context}
                                                     titleText=""
                                                     personSelectionLimit={1}
                                                     groupName={""}
@@ -644,8 +644,9 @@ export default class ProjectSummarySubmit extends React.Component<IProjectSummar
                         <div className="profile-info-row">
                             <div className="profile-info-name"> Upload Attachments </div>
                             <div id='txtAttachemtns' style={{ margin: "5px" }}>
-                                <input id='Attachments' type='file' className='multi' multiple></input>
+                                <input name="files[]" id='Attachments' type='file' className='multi with-preview' multiple></input>
                             </div>
+
                         </div>
                     </div>
 

@@ -200,27 +200,27 @@ export class ListFormService implements IListFormService {
     web.roleAssignments.add(Liaison, 1073741829);
     //Assigning access to the Investor with contribute rights.
     //UserId and roleDefId
-    web.roleAssignments.add(investor, invRollDef);   
+    web.roleAssignments.add(investor, invRollDef);
 
-        let folderURL = `${siteURL}/Shared%20Documents/ProjectSummary.pdf`;
-        let summaryFolder = web.getFolderByServerRelativeUrl(folderURL);
-        let folder = await summaryFolder.getItem();
-        await folder.breakRoleInheritance(false);        
-        await folder.roleAssignments.add(Agency, 1073741826);
-        await folder.roleAssignments.add(Liaison, 1073741829);
-        await folder.roleAssignments.add(IFAdmin, 1073741827);
+    let folderURL = `${siteURL}/Shared%20Documents/ProjectSummary.pdf`;
+    let summaryFolder = web.getFolderByServerRelativeUrl(folderURL);
+    let folder = await summaryFolder.getItem();
+    await folder.breakRoleInheritance(false);
+    await folder.roleAssignments.add(Agency, 1073741826);
+    await folder.roleAssignments.add(Liaison, 1073741829);
+    await folder.roleAssignments.add(IFAdmin, 1073741827);
 
     let Approvals = web.lists.getByTitle("Approvals");
     let issues = web.lists.getByTitle("Issues");
     let sitePages = web.lists.getByTitle("Site Pages");
     let Discussions = web.lists.getByTitle("Discussions");
 
-    await sitePages.breakRoleInheritance(false);   
+    await sitePages.breakRoleInheritance(false);
     sitePages.roleAssignments.add(Liaison, 1073741829);
     sitePages.roleAssignments.add(IFAdmin, 1073741827);
     sitePages.roleAssignments.add(investor, 1073741826);
 
-    await Discussions.breakRoleInheritance(false);   
+    await Discussions.breakRoleInheritance(false);
     Discussions.roleAssignments.add(Liaison, 1073741829);
     Discussions.roleAssignments.add(IFAdmin, 1073741829);
     Discussions.roleAssignments.add(investor, invRollDef);
