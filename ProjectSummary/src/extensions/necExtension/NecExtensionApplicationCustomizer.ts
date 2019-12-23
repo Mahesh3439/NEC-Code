@@ -64,7 +64,7 @@ export default class NecExtensionApplicationCustomizer
         $("#O365_MainLink_Settings").parent().hide();
         $(".SiteContent").hide()
       }
-
+      $("#O365_MainLink_Help").parent().hide();
 
 
     }).catch((error) => {
