@@ -46,7 +46,7 @@
     "@types/microsoft-ajax": "0.0.35",
     "@types/mocha": "2.2.38",
     "@types/sharepoint": "^2016.1.6",
-    "ajv": "~5.2.2",
+    "ajv": "~6.12.3",
     "gulp": "~3.9.1"
   }
 }
